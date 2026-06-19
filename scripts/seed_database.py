@@ -14,7 +14,7 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv('../.env.local')
+load_dotenv('.env.local')
 
 SUPABASE_URL = os.getenv('NEXT_PUBLIC_SUPABASE_URL')
 SERVICE_KEY  = os.getenv('SUPABASE_SERVICE_ROLE_KEY')

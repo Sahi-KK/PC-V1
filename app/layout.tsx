@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'IIM Rohtak – Term IV Academic Calendar',
-  description: 'Academic schedule management portal for IIM Rohtak Term IV (PGP 16)',
+  title: 'PC-V1 Portal',
+  description: 'Exclusive schedule portal for PC-V1 committee members',
   keywords: ['IIM Rohtak', 'Academic Calendar', 'Term IV', 'PGP 16'],
 }
 

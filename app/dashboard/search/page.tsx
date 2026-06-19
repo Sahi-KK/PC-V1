@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import DateStrip from '@/components/DateStrip'
 import ClassCard from '@/components/ClassCard'
+import ProfileModal from '@/components/ProfileModal'
 
 const TERM_START = '2026-06-12'
 const TERM_END   = '2026-09-03'
@@ -54,9 +55,17 @@ export default function SearchPage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [searchResults, setSearchResults] = useState<SearchedStudentData[]>([])
   const [loadingSearch, setLoadingSearch] = useState<Record<string, boolean>>({})
-  const [profile, setProfile] = useState<{ name: string; roll_no: string } | null>(null)
+  const [profile, setProfile] = useState<{ name: string; roll_no: string; email: string } | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
+  const [allStudents, setAllStudents] = useState<Student[]>([])
+  
+  const [aiInput, setAiInput] = useState('')
+  const [aiResponse, setAiResponse] = useState('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  
   const searchRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const searchCache = useRef<Record<string, Student[]>>({})
   const todayDate = new Date().toISOString().split('T')[0]
 
   const supabase = createClient()
@@ -64,9 +73,13 @@ export default function SearchPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/login'); return }
-      supabase.from('user_profiles').select('name,roll_no').eq('id', user.id).single()
+      supabase.from('user_profiles').select('name,roll_no,email').eq('id', user.id).single()
         .then(({ data }) => { if (data) setProfile(data) })
     })
+
+    fetch('/api/students?q=all')
+      .then(res => res.json())
+      .then(data => setAllStudents(data.students || []))
 
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -81,10 +94,20 @@ export default function SearchPage() {
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowDropdown(false); return }
+    
+    const cacheKey = query.toLowerCase()
+    if (searchCache.current[cacheKey]) {
+      setSuggestions(searchCache.current[cacheKey])
+      setShowDropdown(true)
+      return
+    }
+
     debounceRef.current = setTimeout(async () => {
       const res = await fetch(`/api/students?q=${encodeURIComponent(query)}`)
       const data = await res.json()
-      setSuggestions(data.students || [])
+      const results = data.students || []
+      searchCache.current[cacheKey] = results
+      setSuggestions(results)
       setShowDropdown(true)
     }, 250)
   }, [query])
@@ -110,8 +133,28 @@ export default function SearchPage() {
     setLoadingSearch(prev => ({ ...prev, [student.roll_no]: false }))
   }
 
-  function removeStudent(roll_no: string) {
+  async function removeStudent(roll_no: string) {
     setSearchResults(prev => prev.filter(r => r.student.roll_no !== roll_no))
+  }
+
+  async function handleAiSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!aiInput.trim()) return
+    setIsAiLoading(true)
+    setAiResponse('')
+    
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiInput })
+      })
+      const data = await res.json()
+      setAiResponse(data.reply || 'Something went wrong.')
+    } catch (err) {
+      setAiResponse('Failed to connect to AI Assistant.')
+    }
+    setIsAiLoading(false)
   }
 
   function setStudentDate(roll_no: string, date: string) {
@@ -120,42 +163,26 @@ export default function SearchPage() {
     ))
   }
 
-  async function handleSignOut() {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
   return (
     <div className="dashboard">
-      {/* Topbar */}
-      <header className="topbar">
-        <div className="topbar-left">
-          <div className="topbar-logo">
-            <div className="topbar-logo-icon">🎓</div>
-            <span className="topbar-logo-name">IIM Rohtak</span>
-          </div>
-          <div className="topbar-divider" />
-          <div className="tabs">
-            <button className="tab" id="tab-calendar" onClick={() => router.push('/dashboard')}>
-              <span className="tab-icon">📅</span> My Calendar
-            </button>
-            <button className="tab active" id="tab-search">
-              <span className="tab-icon">🔍</span> Search Schedule
-            </button>
-          </div>
+      {/* Mobile Header */}
+      <header className="mobile-header">
+        <div className="mobile-header-logo">
+          <img src="/Logo.jpeg" alt="IIM Rohtak Logo" className="topbar-logo-img" />
+          <span className="topbar-logo-name" style={{ marginLeft: '12px' }}>PC-V1 Portal</span>
         </div>
-        <div className="topbar-right">
+        <div className="mobile-header-right">
           {profile && (
-            <div className="user-chip">
-              <div className="user-avatar">
-                {profile.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
-              </div>
-              <span>{profile.name}</span>
+            <div className="user-avatar" onClick={() => setShowProfile(true)} title="View Profile">
+              {profile.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
             </div>
           )}
-          <button className="btn-signout" onClick={handleSignOut} id="signout-btn">Sign out</button>
         </div>
       </header>
+
+      {showProfile && profile && (
+        <ProfileModal profile={profile} onClose={() => setShowProfile(false)} />
+      )}
 
       <main className="page-content">
         <div className="page-header">
@@ -206,6 +233,53 @@ export default function SearchPage() {
             </div>
           )}
         </div>
+
+        {/* AI Assistant */}
+        <div className="ai-assistant-wrapper">
+          <h2 className="ai-assistant-title">✨ AI Scheduling Assistant</h2>
+          <form className="ai-chat-form" onSubmit={handleAiSubmit}>
+            <input
+              type="text"
+              className="ai-chat-input"
+              placeholder="Ask: Does Krishna have free slots on Aug 15?"
+              value={aiInput}
+              onChange={e => setAiInput(e.target.value)}
+              disabled={isAiLoading}
+            />
+            <button type="submit" className="ai-chat-button" disabled={isAiLoading || !aiInput.trim()}>
+              {isAiLoading ? '...' : 'Ask'}
+            </button>
+          </form>
+          {aiResponse && (
+            <div className="ai-response-box">
+              <div className="ai-response-text">{aiResponse}</div>
+            </div>
+          )}
+        </div>
+
+        {/* All Students Directory */}
+        {query === '' && allStudents.length > 0 && (
+          <div className="student-directory">
+            <h3 className="student-directory-title">All Students Directory</h3>
+            <div className="student-directory-grid scrollable-directory">
+              {allStudents.slice(0, 100).map(s => (
+                <div 
+                  key={s.roll_no} 
+                  className="student-directory-card"
+                  onClick={() => selectStudent(s)}
+                >
+                  <div className="student-directory-avatar">
+                    {s.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                  </div>
+                  <div className="student-directory-info">
+                    <span className="student-directory-name">{s.name}</span>
+                    <span className="student-directory-roll">{s.roll_no}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Selected student chips */}
         {searchResults.length > 0 && (

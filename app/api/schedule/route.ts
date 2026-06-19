@@ -9,6 +9,26 @@ function getService() {
   )
 }
 
+let cachedCourseMap: Record<string, { full_name: string; faculty: string; faculty_abbr: string }> | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+async function getCourseMap(service: any) {
+  if (cachedCourseMap && Date.now() - lastCacheTime < CACHE_TTL) {
+    return cachedCourseMap;
+  }
+  const { data: courses } = await service
+    .from('courses')
+    .select('abbr, full_name, faculty, faculty_abbr, credit')
+  
+  const courseMap: Record<string, { full_name: string; faculty: string; faculty_abbr: string }> = {}
+  courses?.forEach((c: any) => { courseMap[c.abbr] = c })
+  
+  cachedCourseMap = courseMap;
+  lastCacheTime = Date.now();
+  return courseMap;
+}
+
 // GET /api/schedule?roll_no=IPM04134
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
@@ -19,6 +39,9 @@ export async function GET(req: NextRequest) {
   if (!roll_no) return NextResponse.json({ error: 'roll_no required' }, { status: 400 })
 
   const service = getService()
+
+  // Start course map fetch concurrently
+  const courseMapPromise = getCourseMap(service)
 
   // Get student
   const { data: student, error: sErr } = await service
@@ -64,13 +87,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: calErr.message }, { status: 500 })
   }
 
-  // Get course details
-  const { data: courses } = await service
-    .from('courses')
-    .select('abbr, full_name, faculty, faculty_abbr, credit')
-
-  const courseMap: Record<string, { full_name: string; faculty: string; faculty_abbr: string }> = {}
-  courses?.forEach(c => { courseMap[c.abbr] = c })
+  // Await the concurrently fetched course map
+  const courseMap = await courseMapPromise
 
   // Enrich entries with course info
   const enrichedEntries = entries?.map(e => ({

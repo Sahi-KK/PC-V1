@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState<Step>('details')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -66,8 +66,8 @@ export default function RegisterPage() {
     setSuccess('')
 
     const token = otp.join('')
-    if (token.length !== 6) {
-      setError('Please enter the complete 6-digit OTP.')
+    if (token.length !== 8) {
+      setError('Please enter the complete 8-digit OTP.')
       setLoading(false)
       return
     }
@@ -147,8 +147,8 @@ export default function RegisterPage() {
 
   function handleOtpPaste(e: React.ClipboardEvent) {
     e.preventDefault()
-    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-    setOtp(text.split('').concat(Array(6 - text.length).fill('')))
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
+    setOtp(text.split('').concat(Array(8 - text.length).fill('')))
   }
 
   return (
@@ -171,8 +171,8 @@ export default function RegisterPage() {
 
         {step === 'details' && (
           <>
-            <h1 className="auth-title">Create your account</h1>
-            <p className="auth-subtitle">Only registered IIM Rohtak students can access this portal.</p>
+            <h1 className="auth-title">PC-V1 Portal</h1>
+            <p className="auth-subtitle">Exclusive access for PC-V1 members</p>
 
             <form className="auth-form" onSubmit={handleSendOtp}>
               {error && <div className="error-msg">{error}</div>}
@@ -221,7 +221,7 @@ export default function RegisterPage() {
           <>
             <h1 className="auth-title">Verify your email</h1>
             <p className="auth-subtitle">
-              We sent a 6-digit code to <strong style={{ color: 'var(--accent-primary-light)' }}>{email}</strong>
+              We sent an 8-digit code to <strong style={{ color: 'var(--accent-primary-light)' }}>{email}</strong>
             </p>
 
             <form className="auth-form" onSubmit={handleVerifyOtp}>

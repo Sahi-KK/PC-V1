@@ -39,12 +39,12 @@ export default function LoginPage() {
           <div className="auth-logo-icon">🎓</div>
           <div className="auth-logo-text">
             <strong>IIM Rohtak</strong>
-            <span>Term IV Portal</span>
+            <span>PC-V1 Portal</span>
           </div>
         </div>
 
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-subtitle">Sign in to access your academic schedule</p>
+        <h1 className="auth-title">PC-V1 Portal</h1>
+        <p className="auth-subtitle">Exclusive access for PC-V1 members</p>
 
         <form className="auth-form" onSubmit={handleLogin}>
           {error && <div className="error-msg">{error}</div>}

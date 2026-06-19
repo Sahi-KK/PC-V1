@@ -17,18 +17,19 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get('q') || ''
 
-  if (q.length < 2) {
+  if (q.length < 2 && q !== 'all') {
     return NextResponse.json({ students: [] })
   }
 
   const service = getService()
 
-  const { data: students, error } = await service
-    .from('students')
-    .select('id, roll_no, name')
-    .or(`name.ilike.%${q}%,roll_no.ilike.%${q}%`)
-    .order('name')
-    .limit(20)
+  let queryBuilder = service.from('students').select('id, roll_no, name').order('name')
+  
+  if (q !== 'all') {
+    queryBuilder = queryBuilder.or(`name.ilike.%${q}%,roll_no.ilike.%${q}%`).limit(20)
+  }
+
+  const { data: students, error } = await queryBuilder
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
