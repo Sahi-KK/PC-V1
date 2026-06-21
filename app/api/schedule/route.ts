@@ -64,8 +64,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ student, entries: [], dateMetaMap: {}, enrollments: [] })
   }
 
-  // Filter out CW-
-  const courseAbbrSectionPairs = enrollments.filter(e => e.course_abbr !== 'CW-')
+  const courseAbbrSectionPairs = enrollments
 
   if (courseAbbrSectionPairs.length === 0) {
     return NextResponse.json({ student, entries: [], dateMetaMap: {}, enrollments: [] })
@@ -90,6 +89,12 @@ export async function GET(req: NextRequest) {
   // Await the concurrently fetched course map
   const courseMap = await courseMapPromise
 
+  // Fetch attendance
+  const { data: attendance } = await supabase
+    .from('attendance')
+    .select('calendar_entry_id, is_present')
+    .eq('user_id', user.id)
+
   // Enrich entries with course info
   const enrichedEntries = entries?.map(e => ({
     ...e,
@@ -102,5 +107,6 @@ export async function GET(req: NextRequest) {
     student,
     entries: enrichedEntries,
     enrollments: courseAbbrSectionPairs,
+    attendance: attendance || []
   })
 }

@@ -2,8 +2,15 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PC-V1 Portal',
-  description: 'Exclusive schedule portal for PC-V1 committee members',
+  title: 'PC-V1 Academic Calendar',
+  description: 'Academic calendar and attendance tracker for PC-V1',
+  manifest: '/manifest.json',
+  themeColor: '#4f46e5',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'PC-V1 Portal',
+  },
   keywords: ['IIM Rohtak', 'Academic Calendar', 'Term IV', 'PGP 16'],
 }
 
@@ -18,7 +25,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                  }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
+      </body>
     </html>
   )
 }

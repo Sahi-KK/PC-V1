@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* AI Assistant */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap');
+
 .ai-assistant-wrapper {
   margin: 24px 0;
   padding: 20px;
@@ -172,52 +174,55 @@
 /* ──────────────────────────────────────────────────────────
    CSS Variables & Design Tokens
    ────────────────────────────────────────────────────────── */
+
 :root {
-  --bg-base: #ffffff;
+  --bg-base: #f4f4f5; /* Premium off-white/gray like iOS background */
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
   --bg-card-hover: #fafafa;
-  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass: #ffffff; /* Removing transparency per user request */
 
-  /* Rich Emerald & Teal Aesthetic */
-  --accent-primary: #047857; /* Deep Emerald */
+  /* Modern Emerald Palette - Kept as requested */
+  --accent-primary: #059669; 
   --accent-primary-light: #10b981;
-  --accent-primary-glow: rgba(4, 120, 87, 0.15);
-  --accent-secondary: #0f766e; /* Rich Teal */
+  --accent-primary-glow: rgba(16, 185, 129, 0.15);
+  --accent-secondary: #0d9488; 
   --accent-secondary-light: #14b8a6;
   
-  --gradient-primary: linear-gradient(135deg, #047857 0%, #0f766e 100%);
-  --gradient-secondary: linear-gradient(135deg, #0f766e 0%, #047857 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  --gradient-primary: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+  --gradient-secondary: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  --gradient-glass: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
   
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
   --accent-sunday: #ec4899;
   --accent-holiday: #f97316;
-  --accent-exam: #047857;
+  --accent-exam: #059669;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-accent: #047857;
+  --text-primary: #09090b; /* Much darker for extreme contrast */
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --text-accent: #059669;
 
-  --border-subtle: #f1f5f9;
-  --border-active: rgba(4, 120, 87, 0.2);
+  --border-subtle: #e4e4e7;
+  --border-active: rgba(5, 150, 105, 0.3);
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 32px; /* Super rounded corners */
 
-  --shadow-card: 0 4px 20px rgba(4, 120, 87, 0.04), 0 1px 3px rgba(4, 120, 87, 0.02);
-  --shadow-glow: 0 0 30px rgba(4, 120, 87, 0.1);
-  --shadow-accent: 0 6px 16px rgba(4, 120, 87, 0.15);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 40px rgba(5, 150, 105, 0.15);
+  --shadow-accent: 0 8px 20px -4px rgba(5, 150, 105, 0.25);
+  --shadow-float: 0 20px 40px -8px rgba(0, 0, 0, 0.12);
 
-  --transition: all 0.15s ease-out;
-  --transition-slow: all 0.3s ease-out;
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Time slot colors */
-  --slot-1: #4f46e5;
+  --slot-1: #6366f1;
   --slot-2: #0ea5e9;
   --slot-3: #f59e0b;
   --slot-4: #ec4899;
@@ -226,6 +231,22 @@
   --slot-7: #f97316;
   --slot-8: #d946ef;
   --slot-9: #06b6d4;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border-subtle) 25%, #f4f4f5 50%, var(--border-subtle) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: var(--radius-sm);
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -244,12 +265,15 @@ html {
 body {
   background-color: #ffffff;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(4, 120, 87, 0.05) 0px, transparent 60%),
-    radial-gradient(at 100% 0%, rgba(15, 118, 110, 0.05) 0px, transparent 60%);
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 60%),
+    radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.06) 0px, transparent 60%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.06) 0px, transparent 60%),
+    radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.04) 0px, transparent 60%);
   background-attachment: fixed;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text-primary);
   min-height: 100vh;
+  margin: 0;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -559,22 +583,22 @@ input, button, textarea, select {
   box-shadow: var(--shadow-accent);
 }
 
-/* Bottom Mobile Navigation */
+/* Bottom Mobile Navigation - Solid, Modern Floating Island */
 .mobile-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-glass);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid var(--border-subtle);
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: #ffffff;
   display: flex;
   justify-content: space-around;
-  padding: 8px 12px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  padding: 8px;
   z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05);
+  border-radius: 36px;
+  box-shadow: var(--shadow-float);
+  border: 1px solid var(--border-subtle);
 }
 
 .mobile-nav-item {
@@ -611,10 +635,68 @@ input, button, textarea, select {
 .page-content {
   flex: 1;
   padding: 32px;
-  padding-bottom: 96px;
+  padding-bottom: 140px; /* Increased padding to prevent overlap with floating nav bar */
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* ──────────────────────────────────────────────────────────
+   Attendance Course Progress Strip
+   ────────────────────────────────────────────────────────── */
+.course-progress-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  scrollbar-width: none;
+}
+.course-progress-strip::-webkit-scrollbar {
+  display: none;
+}
+.course-progress-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  min-width: 120px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.course-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.course-progress-abbr {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.course-progress-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+.course-progress-pct.danger {
+  color: var(--accent-danger);
+}
+.course-progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--border-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.course-progress-bar-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+.course-progress-bar-fill.danger {
+  background: var(--accent-danger);
 }
 
 .page-header {
@@ -646,7 +728,7 @@ input, button, textarea, select {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 4px 12px;
+  padding: 12px 20px 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-primary) transparent;
   -webkit-overflow-scrolling: touch;
@@ -672,27 +754,29 @@ input, button, textarea, select {
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  border-radius: 24px;
   cursor: pointer;
-  border: 1px solid transparent;
-  background: var(--bg-card);
-  transition: var(--transition);
-  min-width: 64px;
+  border: 1px solid rgba(255,255,255, 0.5);
+  background: var(--bg-surface);
+  transition: var(--transition-slow);
+  min-width: 68px;
   position: relative;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
 }
 
 .date-pill:hover {
   background: var(--bg-card-hover);
-  border-color: var(--border-subtle);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06);
 }
 
 .date-pill.active {
   background: var(--gradient-primary);
   color: white;
   border-color: transparent;
-  box-shadow: var(--shadow-accent);
-  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--shadow-accent), 0 12px 24px -8px rgba(5, 150, 105, 0.4);
+  transform: translateY(-4px) scale(1.05);
 }
 
 .date-pill.today:not(.active) {
@@ -905,12 +989,13 @@ input, button, textarea, select {
 
 .class-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  border: none;
   border-radius: var(--radius-lg);
-  padding: 20px;
-  transition: var(--transition);
+  padding: 24px;
+  transition: var(--transition-slow);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .class-card::before {
@@ -918,17 +1003,15 @@ input, button, textarea, select {
   position: absolute;
   top: 0;
   left: 0;
-  width: 3px;
-  height: 100%;
+  width: 100%;
+  height: 4px;
   background: var(--slot-color, var(--accent-primary));
-  border-radius: 4px 0 0 4px;
 }
 
 .class-card:hover {
   border-color: var(--border-active);
-  background: var(--bg-card-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.08);
 }
 
 .class-card-header {
@@ -943,13 +1026,13 @@ input, button, textarea, select {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
-  background: rgba(108, 99, 255, 0.1);
-  border: 1px solid rgba(108, 99, 255, 0.15);
-  border-radius: 6px;
+  padding: 6px 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border: none;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--accent-primary-light);
+  color: #6366f1;
   white-space: nowrap;
 }
 
@@ -957,26 +1040,26 @@ input, button, textarea, select {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 9px;
-  background: rgba(0, 212, 170, 0.1);
-  border: 1px solid rgba(0, 212, 170, 0.15);
-  border-radius: 6px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: none;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--accent-secondary);
+  color: #10b981;
   white-space: nowrap;
 }
 
 .class-course-abbr {
   display: inline-block;
-  padding: 3px 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  padding: 4px 10px;
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   letter-spacing: 0.04em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .class-course-name {
@@ -1268,6 +1351,7 @@ input, button, textarea, select {
   gap: 20px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  padding: 0 20px;
 }
 
 .legend-item {
@@ -1544,4 +1628,67 @@ input, button, textarea, select {
 }
 .page-title {
   font-size: 22px;
+}
+
+/* Course Progress Strip */
+.course-progress-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 16px 0;
+  margin-top: 12px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
+}
+.course-progress-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.course-progress-card-mini {
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.course-progress-card-mini:active {
+  transform: scale(0.96);
+}
+
+.course-progress-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.course-progress-ring svg {
+  transform: rotate(-90deg);
+}
+.ring-bg {
+  stroke: var(--border-subtle);
+}
+.ring-fill {
+  stroke: var(--accent-primary);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}
+.ring-text {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.course-progress-abbr {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
 }

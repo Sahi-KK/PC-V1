@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   // 1. Get the 13 allowed users
   const { data: allowedUsers } = await service
     .from('allowed_users')
-    .select('name, roll_no')
+    .select('name, roll_no, email')
 
   if (!allowedUsers || allowedUsers.length === 0) {
     return NextResponse.json({ spcs: [] })
@@ -42,48 +42,48 @@ export async function GET(req: NextRequest) {
     .select('id, roll_no')
     .in('roll_no', rollNos)
 
-  if (!students || students.length === 0) {
-    return NextResponse.json({ spcs: [] })
+  // 3. Get their enrollments
+  let enrollments: any[] = []
+  if (students && students.length > 0) {
+    const studentIds = students.map(s => s.id)
+    const { data: scData } = await service
+      .from('student_courses')
+      .select('student_id, course_abbr, section')
+      .in('student_id', studentIds)
+    enrollments = scData || []
   }
 
-  const studentIdToRollNo = new Map(students.map(s => [s.id, s.roll_no]))
-  const studentIds = students.map(s => s.id)
-
-  // 3. Get their enrollments
-  const { data: enrollments } = await service
-    .from('student_courses')
-    .select('student_id, course_abbr, section')
-    .in('student_id', studentIds)
-
-  // 4. Get all calendar entries for that date (excluding holidays/exams)
-  const { data: calendarEntries } = await service
+  // 4. Get all calendar entries for the date
+  const { data: dayEntries } = await service
     .from('calendar_entries')
-    .select('time_slot, course_abbr, section')
+    .select('course_abbr, section, time_slot')
     .eq('date', date)
-    .eq('is_holiday', false)
-    .eq('is_exam_period', false)
 
-  // Pre-process calendar entries into a quick lookup Set: `course_abbr-section-time_slot`
-  const entrySet = new Set(calendarEntries?.map(e => `${e.course_abbr}-${e.section}-${e.time_slot}`))
+  const entriesList = dayEntries || []
 
-  // Calculate free slots for each SPC
-  const spcs = allowedUsers.map(user => {
-    // Find student id
-    const student = students.find(s => s.roll_no === user.roll_no)
-    const sId = student?.id
+  const spcs = allowedUsers.map(u => {
+    // Find student
+    const st = students?.find(s => s.roll_no === u.roll_no)
+    let busySlots: string[] = []
+    
+    if (st) {
+      // Find their enrollments
+      const stEnrollments = enrollments.filter(e => e.student_id === st.id)
+      
+      // Find matching entries for today
+      const stEntries = entriesList.filter(entry => 
+        stEnrollments.some(e => e.course_abbr === entry.course_abbr && e.section === entry.section)
+      )
+      
+      busySlots = stEntries.map(e => e.time_slot)
+    }
 
-    const myEnrollments = enrollments?.filter(e => e.student_id === sId) || []
-
-    // For each time slot, check if they have a class
-    const freeSlots = TIME_ORDER.filter(slot => {
-      // Is there any enrollment that has a calendar entry at this slot?
-      const hasClass = myEnrollments.some(enr => entrySet.has(`${enr.course_abbr}-${enr.section}-${slot}`))
-      return !hasClass
-    })
+    const freeSlots = TIME_ORDER.filter(slot => !busySlots.includes(slot))
 
     return {
-      roll_no: user.roll_no,
-      name: user.name,
+      roll_no: u.roll_no,
+      name: u.name,
+      email: u.email,
       freeSlots
     }
   })

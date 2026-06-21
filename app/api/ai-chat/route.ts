@@ -1,28 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as supabaseCreateClient } from '@supabase/supabase-js'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import fs from 'fs'
+import path from 'path'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const service = supabaseCreateClient(supabaseUrl, supabaseServiceKey)
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json()
+    const { prompt, fileBase64, mimeType } = await req.json()
+
+    // Handle Document/Image Upload with Gemini
+    if (fileBase64 && mimeType) {
+      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured on the server.");
+      
+      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+      
+      const promptText = "Read the attached document/image. Extract and summarize the key points, charts, and information in detail. Output plain text ONLY without any markdown formatting (no asterisks, no hash symbols, no bullet points). Format it as continuous paragraphs suitable for realistic handwritten notes. Keep it concise but highly informative. User query context: " + prompt;
+      
+      const result = await model.generateContent([
+        promptText,
+        {
+          inlineData: {
+            data: fileBase64,
+            mimeType: mimeType
+          }
+        }
+      ]);
+      
+      const responseText = result.response.text();
+      
+      return NextResponse.json({ reply: responseText, type: 'handwritten_notes' });
+    }
 
     // Get current date to help LLM
     const today = new Date().toISOString().split('T')[0];
 
-    const systemPrompt = `You are a helpful AI Scheduling Assistant for the PC-V1 Portal. 
-Your job is to answer scheduling queries accurately. 
+    const systemPrompt = `You are a helpful AI Assistant for the PC-V1 Portal.
+Your job is to answer queries accurately about the app, schedules, materials, and SPOCs.
 Today's date is ${today}.
-To do this, you have access to a tool called 'get_student_schedule' which takes a 'student_name' and optionally a 'date' (YYYY-MM-DD).
-Always use the tool to fetch the schedule before answering.
 
-Standard daily time slots often include: 08:45-10:00, 10:15-11:30, 11:45-13:00, 14:30-15:45, 16:05-17:20, 17:40-18:55.
-If the schedule returned for a specific date does NOT contain an entry for a common time slot, that means the student is FREE during that slot.
-Respond concisely, naturally, and accurately.`
+About the App:
+- Home: Shows the user's schedule, enrolled courses progress, and upcoming classes.
+- Process Date: Shows overall schedules and lets users check other students' schedules.
+- Misc: Contains Expenses (split and track shared costs), SPOC Directory (find Student Point of Contacts for batches), and Materials (cases, datasets, slides for courses).
+- Profile: User details and enrolled courses.
+- Notifications: Native push notifications for expenses and updates.
+
+You have access to the following tools:
+1. 'get_student_schedule': Fetch the timetable for a specific student, optionally on a specific date. 
+   - Note: Standard daily time slots often include: 08:45-10:00, 10:15-11:30, 11:45-13:00, 14:30-15:45, 16:05-17:20, 17:40-18:55. If the schedule returned for a specific date does NOT contain an entry for a common time slot, that means the student is FREE during that slot.
+2. 'search_spoc_directory': Find the assigned SPOC (Student Point of Contact) for a student name or roll number.
+3. 'get_course_materials': Search for materials, case studies, or datasets related to a course.
+
+Always use the appropriate tool before answering questions about data. If a tool returns no data, inform the user accordingly. Respond concisely, naturally, and accurately. Do not invent or hallucinate data.`
 
     const tools = [
       {
@@ -37,6 +74,34 @@ Respond concisely, naturally, and accurately.`
               date: { type: 'string', description: 'The specific date in YYYY-MM-DD format (e.g. "2026-06-20"), if the user mentions a date or "today"/"tomorrow".' }
             },
             required: ['student_name']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'search_spoc_directory',
+          description: 'Search the SPOC directory to find the assigned SPOC for a student.',
+          parameters: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', description: 'The name or roll number of the student to find the SPOC for.' }
+            },
+            required: ['query']
+          }
+        }
+      },
+      {
+        type: 'function',
+        function: {
+          name: 'get_course_materials',
+          description: 'Search for course materials, case studies, or datasets.',
+          parameters: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', description: 'The course name, abbreviation, or keyword (e.g. "Pricing Strategies", "FADT").' }
+            },
+            required: ['query']
           }
         }
       }
@@ -134,6 +199,47 @@ Respond concisely, naturally, and accurately.`
                 requested_date: args.date || 'upcoming 20 classes',
                 schedule: entries || []
             })
+          })
+        } else if (toolCall.function.name === 'search_spoc_directory') {
+          const args = JSON.parse(toolCall.function.arguments)
+          try {
+            const spocsPath = path.join(process.cwd(), 'data', 'spocs.json')
+            const spocsData = JSON.parse(fs.readFileSync(spocsPath, 'utf-8'))
+            
+            const q = (args.query || '').toLowerCase()
+            const found = spocsData.filter((s: any) => 
+                s.name.toLowerCase().includes(q) || 
+                s.roll_no.toLowerCase().includes(q)
+            )
+            
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: found.length > 0 
+                ? JSON.stringify(found) 
+                : `No SPOC found for student "${args.query}".`
+            })
+          } catch (e) {
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: `Error reading SPOC directory.`
+            })
+          }
+        } else if (toolCall.function.name === 'get_course_materials') {
+          const args = JSON.parse(toolCall.function.arguments)
+          const q = args.query || ''
+          const { data: materials } = await service
+            .from('materials')
+            .select('*')
+            .or(`title.ilike.%${q}%,description.ilike.%${q}%,course_abbr.ilike.%${q}%`)
+            
+          messages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: materials && materials.length > 0 
+                ? JSON.stringify(materials) 
+                : `No materials found for "${q}".`
           })
         }
       }

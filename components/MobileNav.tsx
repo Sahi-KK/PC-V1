@@ -1,7 +1,5 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -18,55 +16,69 @@ const ProcessIcon = () => (
   </svg>
 )
 
-const MaterialsIcon = () => (
+const ProfileIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
   </svg>
 )
 
-const SearchIcon = () => (
+const MiscIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"></circle>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    <circle cx="12" cy="12" r="1"></circle>
+    <circle cx="19" cy="12" r="1"></circle>
+    <circle cx="5" cy="12" r="1"></circle>
   </svg>
 )
 
-export default function MobileNav() {
-  const router = useRouter()
-  const pathname = usePathname()
+const AIIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a2 2 0 0 1 2 2c0 1.1-.9 2-2 2a2 2 0 0 1-2-2c0-1.1.9-2 2-2z" />
+    <path d="M19 12a2 2 0 0 1-2-2c0-1.1.9-2 2-2a2 2 0 0 1 2 2c0 1.1-.9 2-2 2z" />
+    <path d="M5 12a2 2 0 0 1 2-2c0-1.1-.9-2-2-2a2 2 0 0 1-2 2c0 1.1.9 2 2 2z" />
+    <path d="M12 22a2 2 0 0 1-2-2c0-1.1.9-2 2-2a2 2 0 0 1 2 2c0 1.1-.9 2-2 2z" />
+    <path d="m10 6.5 4 11" />
+    <path d="m14 6.5-4 11" />
+  </svg>
+)
 
-  if (pathname === '/login' || pathname === '/register') return null
-
+export default function MobileNav({ activeTab, onChange }: { activeTab: string, onChange: (tab: string) => void }) {
   return (
     <nav className="mobile-nav">
       <button 
-        className={`mobile-nav-item ${pathname === '/dashboard' ? 'active' : ''}`}
-        onClick={() => router.push('/dashboard')}
+        className={`mobile-nav-item ${activeTab === 'home' ? 'active' : ''}`}
+        onClick={() => onChange('home')}
       >
         <span className="mobile-nav-icon"><CalendarIcon /></span>
-        <span>Calendar</span>
+        <span>Home</span>
       </button>
       <button 
-        className={`mobile-nav-item ${pathname === '/dashboard/materials' ? 'active' : ''}`}
-        onClick={() => router.push('/dashboard/materials')}
-      >
-        <span className="mobile-nav-icon"><MaterialsIcon /></span>
-        <span>Course Material</span>
-      </button>
-      <button 
-        className={`mobile-nav-item ${pathname === '/dashboard/process' ? 'active' : ''}`}
-        onClick={() => router.push('/dashboard/process')}
+        className={`mobile-nav-item ${activeTab === 'process' ? 'active' : ''}`}
+        onClick={() => onChange('process')}
       >
         <span className="mobile-nav-icon"><ProcessIcon /></span>
         <span>Process Date</span>
       </button>
       <button 
-        className={`mobile-nav-item ${pathname === '/dashboard/search' ? 'active' : ''}`}
-        onClick={() => router.push('/dashboard/search')}
+        className={`mobile-nav-item ${activeTab === 'misc' ? 'active' : ''}`}
+        onClick={() => onChange('misc')}
       >
-        <span className="mobile-nav-icon"><SearchIcon /></span>
-        <span>Search</span>
+        <span className="mobile-nav-icon"><MiscIcon /></span>
+        <span>Misc</span>
+      </button>
+      <button 
+        className={`mobile-nav-item ${activeTab === 'ai' ? 'active' : ''}`}
+        onClick={() => onChange('ai')}
+      >
+        <span className="mobile-nav-icon"><AIIcon /></span>
+        <span>AI</span>
+      </button>
+      <button 
+        className={`mobile-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+        onClick={() => onChange('profile')}
+      >
+        <span className="mobile-nav-icon"><ProfileIcon /></span>
+        <span>Profile</span>
       </button>
     </nav>
   )

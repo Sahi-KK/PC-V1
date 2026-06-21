@@ -1,0 +1,68 @@
+{
+  "name": "PC-V1 Portal",
+  "short_name": "PC-V1",
+  "description": "Academic Calendar, Meetings, and Shared Expenses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "dir": "ltr",
+  "lang": "en-US",
+  "orientation": "portrait-primary",
+  "categories": ["education", "productivity"],
+  "id": "/?source=pwa",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Meetings",
+      "short_name": "Meetings",
+      "description": "Find meeting slots",
+      "url": "/dashboard/meetings"
+    },
+    {
+      "name": "Expenses",
+      "short_name": "Expenses",
+      "description": "Shared expenses",
+      "url": "/dashboard/expenses"
+    }
+  ]
+}

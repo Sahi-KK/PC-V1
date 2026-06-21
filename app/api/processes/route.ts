@@ -16,7 +16,6 @@ export async function GET(req: NextRequest) {
 
   const service = getService()
 
-  // Get all processes ordered by date and time
   const { data: processes, error } = await service
     .from('processes')
     .select(`
@@ -30,9 +29,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Get names of SPCs
   const { data: allowedUsers } = await service.from('allowed_users').select('roll_no, name')
   const nameMap = new Map(allowedUsers?.map(u => [u.roll_no, u.name]) || [])
+
+  const { data: profiles } = await service.from('user_profiles').select('id, name')
+  const creatorMap = new Map(profiles?.map(p => [p.id, p.name]) || [])
 
   const enriched = processes.map(p => ({
     id: p.id,
@@ -41,13 +42,14 @@ export async function GET(req: NextRequest) {
     time_slot: p.time_slot,
     created_at: p.created_at,
     created_by: p.created_by,
+    creator_name: creatorMap.get(p.created_by) || 'Unknown',
     spcs: p.process_spcs.map((ps: any) => ({
       roll_no: ps.spc_roll_no,
       name: nameMap.get(ps.spc_roll_no) || ps.spc_roll_no
     }))
   }))
 
-  return NextResponse.json({ processes: enriched })
+  return NextResponse.json({ processes: enriched, current_user_id: user.id })
 }
 
 export async function POST(req: NextRequest) {
@@ -56,41 +58,68 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { name, date, time_slot, spc_roll_nos } = await req.json()
-    if (!name || !date || !time_slot || !Array.isArray(spc_roll_nos)) {
+    const { name, date, slots } = await req.json()
+    if (!name || !date || !Array.isArray(slots) || slots.length === 0) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
     const service = getService()
 
-    // 1. Insert process
-    const { data: proc, error: pErr } = await service
+    const processInserts = slots.map(s => ({
+      name, date, time_slot: s.time_slot, created_by: user.id
+    }))
+
+    const { data: procs, error: pErr } = await service
       .from('processes')
-      .insert({ name, date, time_slot, created_by: user.id })
-      .select('id')
-      .single()
+      .insert(processInserts)
+      .select('id, time_slot')
 
     if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 })
 
-    // 2. Insert SPCs
-    if (spc_roll_nos.length > 0) {
-      const spcInserts = spc_roll_nos.map(roll_no => ({
-        process_id: proc.id,
-        spc_roll_no: roll_no
-      }))
-      
+    const spcInserts: { process_id: string, spc_roll_no: string }[] = []
+    for (const p of procs) {
+      const slotConfig = slots.find((s: any) => s.time_slot === p.time_slot)
+      if (slotConfig && Array.isArray(slotConfig.spc_roll_nos)) {
+        for (const roll of slotConfig.spc_roll_nos) {
+          spcInserts.push({ process_id: p.id, spc_roll_no: roll })
+        }
+      }
+    }
+
+    if (spcInserts.length > 0) {
       const { error: sErr } = await service.from('process_spcs').insert(spcInserts)
       if (sErr) {
-        // Rollback
-        await service.from('processes').delete().eq('id', proc.id)
         return NextResponse.json({ error: sErr.message }, { status: 500 })
       }
     }
 
-    return NextResponse.json({ ok: true, process_id: proc.id })
+    return NextResponse.json({ ok: true })
 
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
+}
+
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const process_id = req.nextUrl.searchParams.get('id')
+  if (!process_id) return NextResponse.json({ error: 'Missing process ID' }, { status: 400 })
+
+  const service = getService()
+
+  const { data: proc, error: pErr } = await service.from('processes').select('created_by').eq('id', process_id).single()
+  if (pErr || !proc) return NextResponse.json({ error: 'Process not found' }, { status: 404 })
+  
+  if (proc.created_by !== user.id) {
+    return NextResponse.json({ error: 'Only the creator can delete this process' }, { status: 403 })
+  }
+
+  const { error: dErr } = await service.from('processes').delete().eq('id', process_id)
+  if (dErr) return NextResponse.json({ error: dErr.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
 }

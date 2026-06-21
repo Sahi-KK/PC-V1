@@ -50,67 +50,74 @@ export default function ClassCard({
   return (
     <div
       className="class-card animate-fade-up"
-      style={{ '--slot-color': color } as React.CSSProperties}
+      style={{ 
+        '--slot-color': color, 
+        backgroundColor: `${color}0A`, 
+        border: `1px solid ${color}33`,
+        padding: '16px',
+        borderRadius: 'var(--radius-lg)',
+        marginBottom: '16px'
+      } as React.CSSProperties}
     >
-      <div className="class-card-header">
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className="class-time-badge">
-            ⏰ {timeSlot}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            {timeSlot}
           </span>
-          <span className="class-lr-badge">
-            📍 {lr}
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', background: '#f4f4f5', padding: '2px 8px', borderRadius: '12px' }}>
+            {lr}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Session {sessionNumber}</span>
           {totalClassesOccurred > 0 && (
             <div 
               title={`Attendance: ${attendancePerc}% (${attendedClasses}/${totalClassesOccurred})`}
               style={{
-                width: '24px', height: '24px', borderRadius: '50%',
+                width: '20px', height: '20px', borderRadius: '50%',
                 background: attendanceBg,
                 position: 'relative',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             >
-              <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white' }} />
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'white' }} />
             </div>
           )}
-          <span className="class-session-num">#{sessionNumber}</span>
         </div>
       </div>
 
-      <span className="class-course-abbr">{courseAbbr}</span>
-      <h3 className="class-course-name">{cleanName}</h3>
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 700, color: color, marginBottom: '2px', letterSpacing: '0.02em' }}>{courseAbbr}</div>
+        <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2, letterSpacing: '-0.02em' }}>{cleanName}</h3>
+      </div>
 
-      <div className="class-footer">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div className="class-faculty">
-              <div className="class-faculty-avatar">{initials || facultyAbbr.slice(0, 2)}</div>
-              <span className="class-faculty-name">{faculty}</span>
-            </div>
-            <span className="class-section-badge">Sec {section}</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f4f4f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+            {initials || facultyAbbr.slice(0, 2)}
           </div>
-
-          {entryId && onToggleAttendance && isPast && (
-            <div style={{ marginTop: '8px' }}>
-              <button
-                onClick={() => onToggleAttendance(entryId, isPresent)}
-                style={{
-                  width: '100%',
-                  background: isPresent ? 'var(--accent-primary-glow)' : 'transparent',
-                  color: isPresent ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                  border: `1px solid ${isPresent ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                  padding: '6px 12px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                }}
-              >
-                {isPresent ? '✅ Present' : 'Mark Present'}
-              </button>
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{faculty}</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Section {section}</span>
+          </div>
         </div>
+
+        {entryId && onToggleAttendance && isPast && (
+          <button
+            onClick={() => onToggleAttendance(entryId, isPresent)}
+            style={{
+              background: isPresent ? '#10b981' : '#f4f4f5',
+              color: isPresent ? 'white' : 'var(--text-secondary)',
+              border: 'none',
+              padding: '8px 16px', borderRadius: '24px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+              boxShadow: isPresent ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'
+            }}
+          >
+            {isPresent ? 'Present' : 'Mark'}
+          </button>
+        )}
       </div>
     </div>
   )
