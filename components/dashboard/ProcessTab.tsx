@@ -44,6 +44,21 @@ const TERM_START = '2026-06-12'
 const TERM_END   = '2026-09-03'
 const EXAM_START = '2026-08-23'
 const INDEPENDENCE_DAY = '2026-08-15'
+const MUHARRAM = '2026-06-26'
+
+function formatTime12Hour(timeStr: string) {
+  if (timeStr === 'LUNCH') return 'Lunch'
+  const [start, end] = timeStr.split('-')
+  if (!start || !end) return timeStr
+  const format = (t: string) => {
+    let [h, m] = t.split(':')
+    let hNum = parseInt(h, 10)
+    let ampm = hNum >= 12 ? 'PM' : 'AM'
+    hNum = hNum % 12 || 12
+    return `${hNum}:${m} ${ampm}`
+  }
+  return `${format(start)} - ${format(end)}`
+}
 
 function buildTermDates() {
   const dates: string[] = []
@@ -61,7 +76,7 @@ const ALL_DATES = buildTermDates()
 const DATE_STRIP_DATA = ALL_DATES.map(date => {
   const jsDate = new Date(date + 'T00:00:00')
   const isSunday = jsDate.getDay() === 0
-  const isHoliday = date === INDEPENDENCE_DAY
+  const isHoliday = date === INDEPENDENCE_DAY || date === MUHARRAM
   const isExamPeriod = date >= EXAM_START
 
   return {
@@ -70,7 +85,7 @@ const DATE_STRIP_DATA = ALL_DATES.map(date => {
     is_sunday: isSunday,
     is_holiday: isHoliday,
     is_exam_period: isExamPeriod,
-    holiday_name: isHoliday ? 'Independence Day' : undefined,
+    holiday_name: date === INDEPENDENCE_DAY ? 'Independence Day' : date === MUHARRAM ? 'Muharram' : undefined,
     class_count: 0,
   }
 })
@@ -304,7 +319,7 @@ export default function ProcessTab() {
                         border, background: bg, color, cursor: 'pointer', transition: 'var(--transition)'
                       }}
                     >
-                      {slot} {hasSelections ? `(${slotSelections[slot].size})` : ''}
+                      {formatTime12Hour(slot)} {hasSelections ? `(${slotSelections[slot].size})` : ''}
                     </button>
                   )
                 })}
@@ -313,7 +328,7 @@ export default function ProcessTab() {
               {selectedSlot ? (
                 <>
                   <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    2. Assign Available SPCs for <span style={{ color: 'var(--accent-primary)' }}>{selectedSlot}</span>
+                    2. Assign Available SPCs for <span style={{ color: 'var(--accent-primary)' }}>{formatTime12Hour(selectedSlot)}</span>
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
                     {spcAvailability.map(spc => {
@@ -420,7 +435,7 @@ export default function ProcessTab() {
                         background: '#f4f4f5', padding: '4px 8px', borderRadius: '6px',
                         border: '1px solid var(--border-subtle)', whiteSpace: 'nowrap'
                       }}>
-                        {slot.time_slot}
+                        {formatTime12Hour(slot.time_slot)}
                       </div>
                       <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500, alignSelf: 'center', lineHeight: 1.4 }}>
                         {slot.spcs.length > 0 ? slot.spcs.map(s => s.name).join(', ') : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>No SPCs assigned</span>}

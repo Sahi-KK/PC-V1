@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
       <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
         <div style="font-size: 14px; font-weight: 600; color: #4f46e5; margin-bottom: 4px;">${entry.time_slot}</div>
         <div style="font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px;">${courseName} (${entry.course_abbr})</div>
-        <div style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">Room: ${entry.room} • Faculty: ${courseInfo?.faculty || ''}</div>
+        <div style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">LR: ${entry.lr || 'N/A'} • Faculty: ${courseInfo?.faculty || ''}</div>
         ${actionHtml}
       </div>
     `

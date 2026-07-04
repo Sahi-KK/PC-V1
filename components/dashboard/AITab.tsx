@@ -3,77 +3,141 @@
 import { useState, useRef, useEffect } from 'react'
 
 const generateHandwrittenImage = async (text: string): Promise<string> => {
+    // Load Caveat font for handwriting
+    await document.fonts.load('48px "Caveat"');
     await document.fonts.ready;
+
+    // A4 dimensions at 150 DPI
+    const width = 1240;
+    const height = 1754;
+
     const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return '';
 
-    const width = 600;
-    const x = 40;
-    const maxWidth = width - (x * 2);
+    // 1. Scanned Paper Background
+    // Scanners usually overexpose, so mostly pure white with very subtle off-white unevenness
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
     
-    ctx.font = '24px Caveat';
+    // Add subtle scanner noise / uneven brightness
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, 'rgba(250, 250, 250, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(1, 'rgba(245, 248, 250, 1)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Global Scanner Skew
+    // Scanned documents are rarely perfectly aligned
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate(-0.005); // Very slight global rotation
+    ctx.translate(-width / 2, -height / 2);
+
+    // 3. Text Layout and Fitting
+    const marginL = 120;
+    const marginR = 120;
+    const marginT = 150;
+    const marginB = 150;
     
+    let fontSize = 48;
+    let baseLineHeight = 65;
     const paragraphs = text.split('\n');
-    let totalHeight = 40;
-    
-    // Calculate height
-    for (const p of paragraphs) {
-        const words = p.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-                line = words[n] + ' ';
-                totalHeight += 30;
-            } else {
-                line = testLine;
+
+    let willFit = false;
+    while (!willFit && fontSize > 20) {
+        let estimatedY = marginT;
+        ctx.font = `${fontSize}px "Caveat"`;
+        
+        for (const p of paragraphs) {
+            if (!p.trim()) { estimatedY += baseLineHeight; continue; }
+            const words = p.split(/\s+/);
+            let currentX = marginL;
+            for (let i = 0; i < words.length; i++) {
+                const wordWidth = ctx.measureText(words[i] + ' ').width;
+                if (currentX + wordWidth > width - marginR && currentX > marginL) {
+                    currentX = marginL;
+                    estimatedY += baseLineHeight;
+                }
+                currentX += wordWidth + (fontSize * 0.2);
             }
+            estimatedY += baseLineHeight + 15;
         }
-        totalHeight += 40; // extra space for paragraph
+        
+        if (estimatedY < height - marginB) {
+            willFit = true;
+        } else {
+            fontSize -= 2;
+            baseLineHeight = fontSize * 1.35;
+        }
     }
 
-    canvas.width = width;
-    canvas.height = Math.max(totalHeight + 40, 400); // minimum 400px
+    // 4. Draw Handwriting Word-by-Word
+    let y = marginT;
+    ctx.textBaseline = 'alphabetic';
 
-    // Draw background
-    ctx.fillStyle = '#fdfbf7';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw lines
-    ctx.strokeStyle = '#e0dcd3';
-    ctx.lineWidth = 1;
-    for(let i=30; i<canvas.height; i+=30) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(canvas.width, i);
-        ctx.stroke();
-    }
-
-    // Draw text
-    ctx.fillStyle = '#111827';
-    ctx.font = '26px Caveat';
-    let y = 40;
-    
     for (const p of paragraphs) {
-        if (!p.trim()) { y += 20; continue; }
-        const words = p.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-                ctx.fillText(line, x, y);
-                line = words[n] + ' ';
-                y += 30;
-            } else {
-                line = testLine;
-            }
+        if (!p.trim()) {
+            y += baseLineHeight;
+            continue;
         }
-        ctx.fillText(line, x, y);
-        y += 40;
+
+        const words = p.split(/\s+/);
+        let x = marginL + (Math.random() * 20); // Uneven paragraph start
+        
+        // Lines on unruled paper naturally drift up or down
+        let lineAngle = (Math.random() * 0.6 - 0.3) * (Math.PI / 180);
+        let lineDriftY = 0;
+        
+        for (let i = 0; i < words.length; i++) {
+            const word = words[i];
+            ctx.font = `${fontSize}px "Caveat"`;
+            const wordWidth = ctx.measureText(word + ' ').width;
+
+            if (x + wordWidth > width - marginR && x > marginL + 50) {
+                // Wrap to next line
+                y += baseLineHeight + (Math.random() * 6 - 3);
+                x = marginL + (Math.random() * 15);
+                lineAngle = (Math.random() * 0.6 - 0.3) * (Math.PI / 180);
+                lineDriftY = 0;
+            }
+
+            ctx.save();
+            // Jitter position to break perfect baseline
+            const currentY = y + lineDriftY + (Math.random() * 2 - 1);
+            ctx.translate(x, currentY);
+            
+            // Jitter rotation slightly per word
+            const wordAngle = lineAngle + (Math.random() * 0.4 - 0.2) * (Math.PI / 180);
+            ctx.rotate(wordAngle);
+            
+            // Subtle distortion for human inconsistency
+            const scaleX = 1 + (Math.random() * 0.04 - 0.02);
+            const scaleY = 1 + (Math.random() * 0.04 - 0.02);
+            ctx.scale(scaleX, scaleY);
+
+            // Dark, high-contrast scanner blue ink
+            ctx.fillStyle = `rgba(15, 25, 110, 0.95)`;
+            ctx.fillText(word, 0, 0);
+
+            // Simulate ink density/pressure variations
+            if (Math.random() > 0.5) {
+                ctx.fillStyle = `rgba(5, 10, 70, 0.4)`;
+                ctx.fillText(word, 0.5, 0.5);
+            }
+
+            ctx.restore();
+
+            x += (wordWidth * scaleX) + (fontSize * 0.25) + (Math.random() * 4 - 2);
+            lineDriftY += (Math.random() * 1.0 - 0.5);
+        }
+        y += baseLineHeight + 20; // Paragraph spacing
     }
 
-    return canvas.toDataURL('image/png');
+    // JPEG export adds natural scanner-like compression artifacts
+    return canvas.toDataURL('image/jpeg', 0.90);
 }
 
 export default function AITab() {
@@ -106,10 +170,10 @@ export default function AITab() {
     }
   }
 
-  const handleSend = async () => {
-    if (!input.trim() && !attachedFile) return
+  const handleSend = async (overrideMessage?: string) => {
+    const userMessage = overrideMessage || input.trim()
+    if (!userMessage && !attachedFile) return
 
-    const userMessage = input.trim()
     setInput('')
     
     let fileBase64 = ''
@@ -156,7 +220,7 @@ export default function AITab() {
       if (res.ok) {
         if (data.type === 'handwritten_notes') {
             const imgDataUrl = await generateHandwrittenImage(data.reply)
-            setMessages(prev => [...prev, { role: 'ai', content: 'Here are the handwritten notes based on your document:', image: imgDataUrl }])
+            setMessages(prev => [...prev, { role: 'ai', content: 'Here is the generated Decision Sheet:', image: imgDataUrl }])
         } else {
             setMessages(prev => [...prev, { role: 'ai', content: data.reply }])
         }
@@ -174,7 +238,29 @@ export default function AITab() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 180px)' }}>
       <div style={{ marginBottom: '16px' }}>
         <h1 className="page-title" style={{ marginBottom: '8px' }}>AI Assistant</h1>
-        <p className="page-subtitle">Ask me about schedules, classes, or upload a document to get handwritten notes.</p>
+        <p className="page-subtitle" style={{ marginBottom: '12px' }}>Ask me about schedules, classes, or upload a document to get handwritten notes.</p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {["What classes do I have today?", "Show my schedule for this week", "What is Sweta's schedule tomorrow?", "How is my attendance in CV?", "Who teaches GBS?", "What classes are happening on July 10?"].map(q => (
+            <button
+              key={q}
+              onClick={() => { setInput(q); handleSend(q); }}
+              style={{
+                background: 'var(--bg-body)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '100px',
+                padding: '6px 12px',
+                fontSize: '13px',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: '0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div style={{ 
@@ -208,16 +294,25 @@ export default function AITab() {
           }}>
             <span>{msg.content}</span>
             {msg.image && (
-                <img 
-                    src={msg.image} 
-                    alt="Handwritten Notes" 
-                    style={{ 
-                        width: '100%', 
-                        maxWidth: '400px', 
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                    }} 
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                    <img 
+                        src={msg.image} 
+                        alt="Decision Sheet Scanned Copy" 
+                        onClick={() => {
+                            const w = window.open();
+                            w?.document.write(`<html><body style="margin:0; background:#f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh;"><img src="${msg.image}" style="max-height: 95vh; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" /></body></html>`);
+                        }}
+                        style={{ 
+                            width: '100%', 
+                            maxWidth: '700px', 
+                            borderRadius: '2px', // Scanned pages have sharp corners
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                            cursor: 'zoom-in',
+                            border: '1px solid #e0e0e0'
+                        }} 
+                    />
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Click image to view full scanned A4 sheet</span>
+                </div>
             )}
           </div>
         ))}

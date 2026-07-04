@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import DateStrip from '@/components/DateStrip'
 import ClassCard from '@/components/ClassCard'
@@ -10,6 +11,7 @@ const TERM_START = '2026-06-12'
 const TERM_END   = '2026-09-03'
 const EXAM_START = '2026-08-23'
 const INDEPENDENCE_DAY = '2026-08-15'
+const MUHARRAM = '2026-06-26'
 
 function buildTermDates() {
   const dates: string[] = []
@@ -50,6 +52,7 @@ const MONTH_NAMES = ['January','February','March','April','May','June','July','A
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 export default function HomeTab() {
+  const router = useRouter()
   const supabase = createClient()
   const todayDate = new Date().toISOString().split('T')[0]
 
@@ -63,8 +66,20 @@ export default function HomeTab() {
   
   async function toggleAttendance(entryId: string, isCurrentlyPresent: boolean) {
     setAttendance(prev => {
-      if (isCurrentlyPresent) return prev.filter(a => a.calendar_entry_id !== entryId)
-      return [...prev, { calendar_entry_id: entryId, is_present: true }]
+      const newAttendance = isCurrentlyPresent 
+        ? prev.filter(a => a.calendar_entry_id !== entryId)
+        : [...prev, { calendar_entry_id: entryId, is_present: true }]
+      
+      try {
+        const cached = localStorage.getItem('pc_v1_schedule_cache')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          parsed.attendance = newAttendance
+          localStorage.setItem('pc_v1_schedule_cache', JSON.stringify(parsed))
+        }
+      } catch (e) {}
+
+      return newAttendance
     })
 
     await fetch('/api/attendance', {
@@ -82,6 +97,18 @@ export default function HomeTab() {
 
   useEffect(() => {
     async function init() {
+      try {
+        const cached = localStorage.getItem('pc_v1_schedule_cache')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.profile) setProfile(parsed.profile)
+          if (parsed.entries) setEntries(parsed.entries)
+          if (parsed.enrollments) setEnrollments(parsed.enrollments)
+          if (parsed.attendance) setAttendance(parsed.attendance)
+          setLoading(false)
+        }
+      } catch (e) {}
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -103,6 +130,15 @@ export default function HomeTab() {
             setEntries(data.entries)
             setEnrollments(data.enrollments || [])
             setAttendance(data.attendance || [])
+            
+            try {
+              localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
+                profile: prof,
+                entries: data.entries,
+                enrollments: data.enrollments || [],
+                attendance: data.attendance || []
+              }))
+            } catch (e) {}
           }
         }
       }
@@ -147,7 +183,7 @@ export default function HomeTab() {
   const dateStripData = ALL_DATES.map(date => {
     const jsDate = new Date(date + 'T00:00:00')
     const isSunday = jsDate.getDay() === 0
-    const isHoliday = date === INDEPENDENCE_DAY
+    const isHoliday = date === INDEPENDENCE_DAY || date === MUHARRAM
     const isExamPeriod = date >= EXAM_START
     const classCount = entries.filter(e => e.date === date).length
 
@@ -157,7 +193,7 @@ export default function HomeTab() {
       is_sunday: isSunday,
       is_holiday: isHoliday,
       is_exam_period: isExamPeriod,
-      holiday_name: isHoliday ? 'Independence Day' : undefined,
+      holiday_name: date === INDEPENDENCE_DAY ? 'Independence Day' : date === MUHARRAM ? 'Muharram' : undefined,
       class_count: classCount,
     }
   })
@@ -168,94 +204,137 @@ export default function HomeTab() {
 
   const selDate = new Date(selectedDate + 'T00:00:00')
   const isSunday = selDate.getDay() === 0
-  const isHoliday = selectedDate === INDEPENDENCE_DAY
+  const isHoliday = selectedDate === INDEPENDENCE_DAY || selectedDate === MUHARRAM
+  const holidayName = selectedDate === INDEPENDENCE_DAY ? 'Independence Day' : selectedDate === MUHARRAM ? 'Muharram' : ''
   const isExam = selectedDate >= EXAM_START
 
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="loading-full"><div className="spinner" />Loading schedule...</div>
+      <div style={{ padding: '0', animation: 'fadeIn 0.3s ease-out' }}>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'hidden', paddingBottom: '16px', marginBottom: '24px' }}>
+          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ minWidth: '100px', height: '140px', borderRadius: '16px' }} />)}
+        </div>
+        <div className="skeleton" style={{ height: '32px', width: '200px', marginBottom: '16px', borderRadius: '8px' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+          {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '120px', borderRadius: '20px' }} />)}
+        </div>
       </div>
     )
   }
 
-  const QUOTES = [
-    "Let's crush these classes! 🚀",
-    "Time to get that A! 📚",
-    "Giddy up, brilliant mind! 🐎",
-    "Another day, another case study! 💼",
-    "Stay sharp, future leader! 🌟",
-    "Coffee in hand, let's go! ☕",
-    "Make today count! ⚡",
-    "One step closer to graduation! 🎓",
-    "Embrace the challenge! 💪"
-  ]
-  const todayIndex = Math.floor(new Date().getTime() / 86400000) % QUOTES.length
-  const dailyQuote = QUOTES[todayIndex]
-
   return (
     <>
-      <div className="page-header" style={{ marginBottom: '24px' }}>
-        <h1 className="page-title" style={{ fontSize: '26px' }}>
-          Hello {profile?.name ? profile.name.split(' ')[0] : 'Student'},
-        </h1>
-        <div style={{ fontSize: '15px', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic', fontWeight: 500 }}>
-          {dailyQuote}
-        </div>
-      </div>
-
       <DashboardSearch />
 
-      {nextClassInfo && nextClassInfo.startsInMs < 24 * 60 * 60 * 1000 && (
-        <div style={{
-          background: 'linear-gradient(135deg, var(--accent-primary) 0%, #059669 100%)',
-          borderRadius: 'var(--radius-xl)', padding: '20px', color: 'white', marginBottom: '24px',
-          boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)', position: 'relative', overflow: 'hidden'
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', opacity: 0.9 }}>
-            Next Class
+      {enrollments.length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', padding: '0 4px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Attendance Overview</h2>
+            <button 
+              onClick={() => router.push('/dashboard/attendance')}
+              style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent-primary)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+              See all &rarr;
+            </button>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>{nextClassInfo.course}</span>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: 500, opacity: 0.9 }}>
-            <span>⏰ {nextClassInfo.time}</span>
-            <span>📍 {nextClassInfo.lr}</span>
+          
+          <div className="enrolled-courses-strip" style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
+            {enrollments.map((enrollment, idx) => {
+              const courseEntriesOccurred = entries.filter(e => 
+                e.course_abbr === enrollment.course_abbr && 
+                e.date <= todayDate &&
+                !e.is_holiday && !e.is_exam_period
+              )
+              const totalClassesOccurred = courseEntriesOccurred.length
+              let attendedClasses = 0
+              
+              if (totalClassesOccurred > 0) {
+                const userAttendedIds = new Set(attendance.filter(a => a.is_present).map(a => a.calendar_entry_id))
+                attendedClasses = courseEntriesOccurred.filter(e => userAttendedIds.has((e as any).id)).length
+              }
+
+              const percentage = totalClassesOccurred > 0 ? Math.round((attendedClasses / totalClassesOccurred) * 100) : 100
+              const isDanger = percentage < 75
+              const color = isDanger ? '#ef4444' : '#10b981'
+              const radius = 22
+              const circumference = 2 * Math.PI * radius
+              const offset = circumference - (percentage / 100) * circumference
+
+              return (
+                <div 
+                  key={enrollment.course_abbr} 
+                  onClick={() => router.push(`/dashboard/attendance/${enrollment.course_abbr}`)}
+                  style={{
+                    background: 'var(--bg-surface)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px 16px',
+                    minWidth: '130px',
+                    boxShadow: 'var(--shadow-card)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    border: '1px solid var(--border-subtle)'
+                  }}
+                >
+                  <div style={{ position: 'relative', width: '60px', height: '60px', marginBottom: '8px' }}>
+                    <svg width="60" height="60" viewBox="0 0 60 60">
+                      <circle cx="30" cy="30" r={radius} fill="none" stroke="var(--border-subtle)" strokeWidth="6" />
+                      <circle 
+                        cx="30" cy="30" r={radius} 
+                        fill="none" 
+                        stroke={color} 
+                        strokeWidth="6" 
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', transition: 'stroke-dashoffset 0.5s ease' }}
+                      />
+                    </svg>
+                    <div style={{
+                      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '14px', fontWeight: 700, color: color
+                    }}>
+                      {percentage}%
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {enrollment.course_abbr}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {enrollments.length > 0 && (
-        <div className="course-progress-strip">
-          {enrollments.map((enrollment, idx) => {
-            const courseEntriesOccurred = entries.filter(e => 
-              e.course_abbr === enrollment.course_abbr && 
-              e.date <= todayDate &&
-              !e.is_holiday && !e.is_exam_period
-            )
-            const totalClassesOccurred = courseEntriesOccurred.length
-            let attendedClasses = 0
-            
-            if (totalClassesOccurred > 0) {
-              const occurredEntryIds = new Set(courseEntriesOccurred.map(e => (e as any).id))
-              const userAttendedIds = new Set(attendance.filter(a => a.is_present).map(a => a.calendar_entry_id))
-              attendedClasses = courseEntriesOccurred.filter(e => userAttendedIds.has((e as any).id)).length
-            }
-
-            const percentage = totalClassesOccurred > 0 ? Math.round((attendedClasses / totalClassesOccurred) * 100) : 100
-            
-            return (
-              <div key={enrollment.course_abbr} className="course-progress-card">
-                <div className="course-progress-header">
-                  <span className="course-progress-abbr">{enrollment.course_abbr}</span>
-                  <span className={`course-progress-pct ${percentage < 75 ? 'danger' : ''}`}>{percentage}%</span>
-                </div>
-                <div className="course-progress-bar-bg">
-                  <div className={`course-progress-bar-fill ${percentage < 75 ? 'danger' : ''}`} style={{ width: `${percentage}%` }}></div>
-                </div>
-              </div>
-            )
-          })}
+      {nextClassInfo && nextClassInfo.startsInMs < 24 * 60 * 60 * 1000 && (
+        <div style={{
+          background: 'var(--bg-surface)',
+          borderRadius: 'var(--radius-xl)', padding: '24px', marginBottom: '24px',
+          boxShadow: 'var(--shadow-card)', position: 'relative', overflow: 'hidden',
+          border: '1px solid var(--border-subtle)'
+        }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '6px', background: 'var(--gradient-primary)' }} />
+          <div style={{ paddingLeft: '8px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', marginBottom: '8px' }}>
+              Next Class
+            </div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+              {nextClassInfo.course}
+            </div>
+            <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {nextClassInfo.time}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {nextClassInfo.lr}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -275,19 +354,18 @@ export default function HomeTab() {
             {DAY_NAMES[selDate.getDay()]}, {selDate.getDate()} {MONTH_NAMES[selDate.getMonth()]} {selDate.getFullYear()}
           </span>
         </div>
-        {isSunday && <span className="schedule-badge schedule-badge-sunday">🌙 Sunday</span>}
-        {isHoliday && <span className="schedule-badge schedule-badge-holiday">🇮🇳 Independence Day</span>}
-        {isExam && !isHoliday && <span className="schedule-badge schedule-badge-exam">📝 End-Term Exams</span>}
+        {isSunday && <span className="schedule-badge schedule-badge-sunday">Sunday</span>}
+        {isHoliday && <span className="schedule-badge schedule-badge-holiday">{holidayName}</span>}
+        {isExam && !isHoliday && <span className="schedule-badge schedule-badge-exam">End-Term Exams</span>}
       </div>
 
       {dayClasses.length === 0 ? (
         <div className="no-classes">
-          <div className="no-classes-icon">{isHoliday ? '🇮🇳' : isExam ? '📝' : isSunday ? '🌙' : '📭'}</div>
-          <div className="no-classes-text">
-            {isHoliday ? 'Independence Day – No Classes' : isExam ? 'End-Term Exam Period' : isSunday ? 'No classes on Sunday' : 'No classes scheduled'}
+          <div className="no-classes-text" style={{ fontSize: '16px', fontWeight: 600 }}>
+            {isHoliday ? `${holidayName} – No Classes` : isExam ? 'End-Term Exam Period' : isSunday ? 'No classes on Sunday' : 'No classes scheduled'}
           </div>
           {!isHoliday && !isExam && !isSunday && (
-            <div className="no-classes-sub">Enjoy your free day! 🎉</div>
+            <div className="no-classes-sub" style={{ marginTop: '8px' }}>Enjoy your free day!</div>
           )}
         </div>
       ) : (

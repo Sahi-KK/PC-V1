@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 
 import HomeTab from '@/components/dashboard/HomeTab'
-import ProcessTab from '@/components/dashboard/ProcessTab'
+import TodoTab from '@/components/dashboard/TodoTab'
 import MiscTab from '@/components/dashboard/MiscTab'
 import AITab from '@/components/dashboard/AITab'
 import ProfileTab from '@/components/dashboard/ProfileTab'
@@ -55,7 +55,7 @@ export default function DashboardPage() {
         <div style={{ display: activeTab === 'home' ? 'block' : 'none' }}>
           <HomeTab />
         </div>
-        {activeTab === 'process' && <ProcessTab />}
+        {activeTab === 'todo' && <TodoTab />}
         {activeTab === 'misc' && <MiscTab />}
         {activeTab === 'ai' && <AITab />}
         {activeTab === 'profile' && <ProfileTab />}

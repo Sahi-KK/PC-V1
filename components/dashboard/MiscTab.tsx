@@ -48,6 +48,25 @@ export default function MiscTab() {
             </div>
           </div>
         </Link>
+
+        <Link href="/dashboard/process" style={{ textDecoration: 'none' }}>
+          <div style={{
+            background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-xl)',
+            boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)',
+            display: 'flex', alignItems: 'center', gap: '16px', transition: 'var(--transition)'
+          }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px'
+            }}>
+              ⚙️
+            </div>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Process Date</h2>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>Calculate relative dates based on term schedule.</p>
+            </div>
+          </div>
+        </Link>
       </div>
     </>
   )

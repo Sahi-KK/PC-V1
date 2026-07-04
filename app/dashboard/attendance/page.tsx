@@ -25,6 +25,39 @@ export default function AttendancePage() {
 
   useEffect(() => {
     async function load() {
+      function processData(entries: any[], enrollments: any[], attendance: any[]) {
+        const attendedIds = new Set(attendance.filter((a: any) => a.is_present).map((a: any) => a.calendar_entry_id))
+        const courseStats = enrollments.map(enr => {
+          const courseEntries = entries.filter(e => e.course_abbr === enr.course_abbr)
+          const fullName = courseEntries.length > 0 ? courseEntries[0].course_full_name : enr.course_abbr
+          
+          const occurredEntries = courseEntries.filter(e => e.date <= todayDate && !e.is_holiday && !e.is_exam_period)
+          const total = occurredEntries.length
+          const attended = occurredEntries.filter(e => attendedIds.has(e.id)).length
+          const percentage = total > 0 ? Math.round((attended / total) * 100) : 100
+
+          return {
+            abbr: enr.course_abbr,
+            fullName: fullName.replace(/\s*\([^)]+\)\s*$/, ''),
+            attended,
+            total,
+            percentage
+          }
+        })
+        setCourses(courseStats)
+      }
+
+      try {
+        const cached = localStorage.getItem('pc_v1_schedule_cache')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.entries && parsed.enrollments && parsed.attendance) {
+            processData(parsed.entries, parsed.enrollments, parsed.attendance)
+            setLoading(false)
+          }
+        }
+      } catch(e) {}
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
@@ -42,30 +75,19 @@ export default function AttendancePage() {
       
       const entries: ScheduleEntry[] = data.entries || []
       const enrollments: {course_abbr: string}[] = data.enrollments || []
-
       const attendance = attRes.attendance || []
-      const attendedIds = new Set(attendance.filter((a: any) => a.is_present).map((a: any) => a.calendar_entry_id))
 
-      // Process courses
-      const courseStats = enrollments.map(enr => {
-        const courseEntries = entries.filter(e => e.course_abbr === enr.course_abbr)
-        const fullName = courseEntries.length > 0 ? courseEntries[0].course_full_name : enr.course_abbr
-        
-        const occurredEntries = courseEntries.filter(e => e.date <= todayDate && !e.is_holiday && !e.is_exam_period)
-        const total = occurredEntries.length
-        const attended = occurredEntries.filter(e => attendedIds.has(e.id)).length
-        const percentage = total > 0 ? Math.round((attended / total) * 100) : 100
+      processData(entries, enrollments, attendance)
+      
+      try {
+        localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
+          profile: prof,
+          entries: entries,
+          enrollments: enrollments,
+          attendance: attendance
+        }))
+      } catch (e) {}
 
-        return {
-          abbr: enr.course_abbr,
-          fullName: fullName.replace(/\s*\([^)]+\)\s*$/, ''),
-          attended,
-          total,
-          percentage
-        }
-      })
-
-      setCourses(courseStats)
       setLoading(false)
     }
     load()

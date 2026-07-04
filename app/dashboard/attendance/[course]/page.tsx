@@ -30,6 +30,29 @@ export default function CourseAttendancePage() {
 
   useEffect(() => {
     async function load() {
+      function processData(allEntries: any[], attendance: any[]) {
+        const courseEntries = allEntries
+          .filter(e => e.course_abbr === courseAbbr && !e.is_holiday && !e.is_exam_period)
+          .sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date)
+            return a.time_slot.localeCompare(b.time_slot)
+          })
+        
+        setEntries(courseEntries)
+        setAttendedIds(new Set(attendance.filter((a: any) => a.is_present).map((a: any) => a.calendar_entry_id)))
+      }
+
+      try {
+        const cached = localStorage.getItem('pc_v1_schedule_cache')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.entries && parsed.attendance) {
+            processData(parsed.entries, parsed.attendance)
+            setLoading(false)
+          }
+        }
+      } catch(e) {}
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
@@ -45,17 +68,19 @@ export default function CourseAttendancePage() {
       const data = await res.json()
       
       const allEntries: ScheduleEntry[] = data.entries || []
-      const courseEntries = allEntries
-        .filter(e => e.course_abbr === courseAbbr && !e.is_holiday && !e.is_exam_period)
-        .sort((a, b) => {
-          if (a.date !== b.date) return a.date.localeCompare(b.date)
-          return a.time_slot.localeCompare(b.time_slot)
-        })
-      
-      setEntries(courseEntries)
-
       const attendance = attRes.attendance || []
-      setAttendedIds(new Set(attendance.filter((a: any) => a.is_present).map((a: any) => a.calendar_entry_id)))
+
+      processData(allEntries, attendance)
+      
+      try {
+        localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
+          profile: prof,
+          entries: allEntries,
+          enrollments: data.enrollments || [],
+          attendance: attendance
+        }))
+      } catch (e) {}
+
       setLoading(false)
     }
     load()
@@ -67,6 +92,20 @@ export default function CourseAttendancePage() {
     if (isCurrentlyPresent) newAttended.delete(entryId)
     else newAttended.add(entryId)
     setAttendedIds(newAttended)
+
+    // Update global cache so other tabs see it instantly
+    try {
+      const cached = localStorage.getItem('pc_v1_schedule_cache')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        const currentAtt = parsed.attendance || []
+        const newAttArray = isCurrentlyPresent
+          ? currentAtt.filter((a: any) => a.calendar_entry_id !== entryId)
+          : [...currentAtt, { calendar_entry_id: entryId, is_present: true }]
+        parsed.attendance = newAttArray
+        localStorage.setItem('pc_v1_schedule_cache', JSON.stringify(parsed))
+      }
+    } catch (e) {}
 
     const action = isCurrentlyPresent ? 'undo' : 'present'
     await fetch('/api/attendance', {
@@ -138,13 +177,14 @@ export default function CourseAttendancePage() {
                   <button
                     onClick={() => toggleAttendance(entry.id, isPresent)}
                     style={{
-                      background: isPresent ? 'var(--accent-primary-glow)' : 'transparent',
-                      color: isPresent ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                      border: `1px solid ${isPresent ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                      padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer'
+                      background: isPresent ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      color: isPresent ? '#10b981' : '#ef4444',
+                      border: `1px solid ${isPresent ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                      padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    {isPresent ? '✅ Present' : 'Mark Present'}
+                    {isPresent ? '✓ Attended' : '✗ Missed'}
                   </button>
                 ) : (
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Upcoming</span>

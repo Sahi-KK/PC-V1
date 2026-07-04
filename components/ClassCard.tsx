@@ -47,77 +47,79 @@ export default function ClassCard({
   const attendanceColor = isLowAttendance ? 'var(--accent-danger)' : 'var(--accent-primary)'
   const attendanceBg = `conic-gradient(${attendanceColor} ${attendancePerc}%, #e2e8f0 ${attendancePerc}%)`
 
+  const startTime = timeSlot.split('-')[0]
+  
   return (
-    <div
-      className="class-card animate-fade-up"
-      style={{ 
-        '--slot-color': color, 
-        backgroundColor: `${color}0A`, 
-        border: `1px solid ${color}33`,
-        padding: '16px',
-        borderRadius: 'var(--radius-lg)',
-        marginBottom: '16px'
-      } as React.CSSProperties}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            {timeSlot}
-          </span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', background: '#f4f4f5', padding: '2px 8px', borderRadius: '12px' }}>
-            {lr}
-          </span>
+    <div className="class-card animate-fade-up" style={{ display: 'flex', gap: '16px', position: 'relative', opacity: isPast ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+      
+      {/* Timeline Column */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px', flexShrink: 0 }}>
+        <div style={{ fontSize: '12px', fontWeight: 800, color: isPast ? 'var(--text-muted)' : 'var(--text-primary)', marginTop: '2px' }}>
+          {startTime}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Session {sessionNumber}</span>
-          {totalClassesOccurred > 0 && (
-            <div 
-              title={`Attendance: ${attendancePerc}% (${attendedClasses}/${totalClassesOccurred})`}
-              style={{
-                width: '20px', height: '20px', borderRadius: '50%',
-                background: attendanceBg,
-                position: 'relative',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}
-            >
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'white' }} />
+        <div style={{ 
+          width: '10px', height: '10px', borderRadius: '50%', 
+          background: isPast ? 'var(--border-subtle)' : color, 
+          margin: '8px 0',
+          boxShadow: isPast ? 'none' : `0 0 0 4px ${color}33`
+        }} />
+        <div style={{ flex: 1, width: '2px', background: 'var(--border-subtle)', opacity: 0.5, minHeight: '40px' }} />
+      </div>
+
+      {/* Content Column */}
+      <div style={{ flex: 1, paddingBottom: '24px' }}>
+        <div style={{ 
+          background: 'var(--bg-surface)', 
+          border: '1px solid var(--border-subtle)', 
+          borderRadius: 'var(--radius-lg)',
+          padding: '16px',
+          boxShadow: 'var(--shadow-sm)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: color }} />
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: color, letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {courseAbbr}
+              <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg-base)', padding: '2px 6px', borderRadius: '10px' }}>
+                Session {sessionNumber}
+              </span>
             </div>
-          )}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, color: color, marginBottom: '2px', letterSpacing: '0.02em' }}>{courseAbbr}</div>
-        <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2, letterSpacing: '-0.02em' }}>{cleanName}</h3>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#f4f4f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-            {initials || facultyAbbr.slice(0, 2)}
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', background: 'var(--bg-base)', padding: '4px 8px', borderRadius: '6px' }}>
+              📍 {lr}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{faculty}</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Section {section}</span>
+
+          <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.3, letterSpacing: '-0.01em', marginBottom: '12px' }}>
+            {cleanName}
+          </h3>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                {initials || facultyAbbr.slice(0, 2)}
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>{faculty}</span>
+            </div>
+
+            {entryId && onToggleAttendance && (
+              <button
+                onClick={() => onToggleAttendance(entryId, isPresent)}
+                style={{
+                  background: isPresent ? '#10b981' : 'var(--bg-base)',
+                  color: isPresent ? 'white' : 'var(--text-secondary)',
+                  border: isPresent ? 'none' : '1px solid var(--border-subtle)',
+                  padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isPresent ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none'
+                }}
+              >
+                {isPresent ? '✓ Marked' : 'Mark'}
+              </button>
+            )}
           </div>
         </div>
-
-        {entryId && onToggleAttendance && isPast && (
-          <button
-            onClick={() => onToggleAttendance(entryId, isPresent)}
-            style={{
-              background: isPresent ? '#10b981' : '#f4f4f5',
-              color: isPresent ? 'white' : 'var(--text-secondary)',
-              border: 'none',
-              padding: '8px 16px', borderRadius: '24px', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-              boxShadow: isPresent ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'
-            }}
-          >
-            {isPresent ? 'Present' : 'Mark'}
-          </button>
-        )}
       </div>
     </div>
   )

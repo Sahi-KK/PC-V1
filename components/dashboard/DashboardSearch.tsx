@@ -8,6 +8,7 @@ const TERM_START = '2026-06-12'
 const TERM_END   = '2026-09-03'
 const EXAM_START = '2026-08-23'
 const INDEPENDENCE_DAY = '2026-08-15'
+const MUHARRAM = '2026-06-26'
 
 function buildTermDates() {
   const dates: string[] = []
@@ -208,7 +209,7 @@ export default function DashboardSearch() {
         const dateStripData = ALL_DATES.map(date => {
           const jsDate = new Date(date + 'T00:00:00')
           const isSunday = jsDate.getDay() === 0
-          const isHoliday = date === INDEPENDENCE_DAY
+          const isHoliday = date === INDEPENDENCE_DAY || date === MUHARRAM
           const isExamPeriod = date >= EXAM_START
           const classCount = r.entries.filter(e => e.date === date).length
           return {

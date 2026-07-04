@@ -3,6 +3,56 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import DateStrip from '@/components/DateStrip'
+
+const TERM_START = '2026-06-12'
+const TERM_END   = '2026-09-03'
+const EXAM_START = '2026-08-23'
+const INDEPENDENCE_DAY = '2026-08-15'
+const MUHARRAM = '2026-06-26'
+
+function formatTime12Hour(timeStr: string) {
+  if (timeStr === 'LUNCH') return 'Lunch'
+  const [start, end] = timeStr.split('-')
+  const format = (t: string) => {
+    let [h, m] = t.split(':')
+    let hNum = parseInt(h, 10)
+    let ampm = hNum >= 12 ? 'PM' : 'AM'
+    hNum = hNum % 12 || 12
+    return `${hNum}:${m} ${ampm}`
+  }
+  return `${format(start)} - ${format(end)}`
+}
+
+function buildTermDates() {
+  const dates: string[] = []
+  const cur = new Date(TERM_START)
+  const end = new Date(TERM_END)
+  while (cur <= end) {
+    dates.push(cur.toISOString().split('T')[0])
+    cur.setDate(cur.getDate() + 1)
+  }
+  return dates
+}
+
+const ALL_DATES = buildTermDates()
+
+const DATE_STRIP_DATA = ALL_DATES.map(date => {
+  const jsDate = new Date(date + 'T00:00:00')
+  const isSunday = jsDate.getDay() === 0
+  const isHoliday = date === INDEPENDENCE_DAY || date === MUHARRAM
+  const isExamPeriod = date >= EXAM_START
+
+  return {
+    date,
+    day_of_week: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][jsDate.getDay()],
+    is_sunday: isSunday,
+    is_holiday: isHoliday,
+    is_exam_period: isExamPeriod,
+    holiday_name: date === INDEPENDENCE_DAY ? 'Independence Day' : date === MUHARRAM ? 'Muharram' : undefined,
+    class_count: 0,
+  }
+})
 
 const TIME_ORDER = [
   '10:20-11:35','11:55-1:10',
@@ -11,7 +61,11 @@ const TIME_ORDER = [
 ]
 
 export default function MeetingsPage() {
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
+  const todayDate = new Date().toISOString().split('T')[0]
+  const [date, setDate] = useState(() => {
+    if (todayDate >= TERM_START && todayDate <= TERM_END) return todayDate
+    return TERM_START
+  })
   const [spcs, setSpcs] = useState<any[]>([])
   const [selectedRollNos, setSelectedRollNos] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
@@ -66,13 +120,13 @@ export default function MeetingsPage() {
       </div>
 
       <div style={{ background: 'var(--bg-glass)', borderRadius: 'var(--radius-xl)', padding: '24px', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}>
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Select Date</label>
-          <input 
-            type="date" 
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', width: '100%', maxWidth: '300px', fontSize: '15px' }}
+        <div style={{ marginBottom: '24px', margin: '0 -24px 24px -24px' }}>
+          <label style={{ display: 'block', padding: '0 24px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>Select Date</label>
+          <DateStrip
+            dates={DATE_STRIP_DATA}
+            selectedDate={date}
+            onSelectDate={setDate}
+            todayDate={todayDate}
           />
         </div>
 
@@ -127,7 +181,7 @@ export default function MeetingsPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
                   {commonSlots.map(slot => (
                     <div key={slot} style={{ background: 'var(--gradient-primary)', color: 'white', borderRadius: 'var(--radius-lg)', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', boxShadow: 'var(--shadow-accent)' }}>
-                      {slot}
+                      {formatTime12Hour(slot)}
                     </div>
                   ))}
                 </div>
