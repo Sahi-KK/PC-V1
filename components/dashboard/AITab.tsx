@@ -401,7 +401,7 @@ export default function AITab() {
                 }}
             />
             <button 
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={isLoading || (!input.trim() && !attachedFile)}
                 style={{
                     background: 'var(--accent-primary)',
