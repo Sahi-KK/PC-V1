@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const requestedRollNo = req.nextUrl.searchParams.get('roll_no')
+
   const service = getService()
 
   // Phase 1: Fetch Profile and CourseMap in parallel
@@ -47,9 +49,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ profile: prof, student: null, entries: [], enrollments: [], attendance: [] })
   }
 
+  const targetRollNo = requestedRollNo || prof.roll_no
+
   // Phase 2: Fetch Student and Attendance in parallel
   const [{ data: student }, { data: attendance }] = await Promise.all([
-    service.from('students').select('id, name, roll_no').eq('roll_no', prof.roll_no).single(),
+    service.from('students').select('id, name, roll_no').eq('roll_no', targetRollNo).single(),
     supabase.from('attendance').select('calendar_entry_id, is_present').eq('user_id', user.id)
   ])
 
