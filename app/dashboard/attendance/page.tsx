@@ -58,34 +58,26 @@ export default function AttendancePage() {
         }
       } catch(e) {}
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-
-      const [profRes, attRes] = await Promise.all([
-        supabase.from('user_profiles').select('roll_no').eq('id', user.id).single(),
-        fetch('/api/attendance').then(r => r.json())
-      ])
-
-      const prof = profRes.data
-      if (!prof) return
-
-      // Fetch schedule
-      const res = await fetch(`/api/schedule?roll_no=${prof.roll_no}`)
-      const data = await res.json()
-      
-      const entries: ScheduleEntry[] = data.entries || []
-      const enrollments: {course_abbr: string}[] = data.enrollments || []
-      const attendance = attRes.attendance || []
-
-      processData(entries, enrollments, attendance)
-      
       try {
-        localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
-          profile: prof,
-          entries: entries,
-          enrollments: enrollments,
-          attendance: attendance
-        }))
+        const res = await fetch(`/api/schedule`)
+        if (res.status === 401) { router.push('/login'); return }
+        const data = await res.json()
+        
+        const entries: ScheduleEntry[] = data.entries || []
+        const enrollments: {course_abbr: string}[] = data.enrollments || []
+        const attendance = data.attendance || []
+        const prof = data.profile || null
+
+        processData(entries, enrollments, attendance)
+        
+        try {
+          localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
+            profile: prof,
+            entries: entries,
+            enrollments: enrollments,
+            attendance: attendance
+          }))
+        } catch (e) {}
       } catch (e) {}
 
       setLoading(false)

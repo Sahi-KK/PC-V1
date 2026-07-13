@@ -109,39 +109,29 @@ export default function HomeTab() {
         }
       } catch (e) {}
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: prof } = await supabase.from('user_profiles').select('name, roll_no, email').eq('id', user.id).single()
-      if (prof) setProfile(prof)
-
       if (todayDate >= TERM_START && todayDate <= TERM_END) {
         setSelectedDate(todayDate)
       } else {
         setSelectedDate(TERM_START)
       }
 
-      if (prof?.roll_no) {
-        const { data: student } = await supabase.from('students').select('id').eq('roll_no', prof.roll_no).single()
-        if (student) {
-          const res = await fetch(`/api/schedule?roll_no=${prof.roll_no}`)
-          const data = await res.json()
-          if (data.entries) {
-            setEntries(data.entries)
-            setEnrollments(data.enrollments || [])
-            setAttendance(data.attendance || [])
-            
-            try {
-              localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
-                profile: prof,
-                entries: data.entries,
-                enrollments: data.enrollments || [],
-                attendance: data.attendance || []
-              }))
-            } catch (e) {}
-          }
-        }
-      }
+      try {
+        const res = await fetch(`/api/schedule`)
+        if (res.status === 401) return
+        
+        const data = await res.json()
+        if (data.profile) setProfile(data.profile)
+        if (data.entries) setEntries(data.entries)
+        if (data.enrollments) setEnrollments(data.enrollments)
+        if (data.attendance) setAttendance(data.attendance)
+        
+        localStorage.setItem('pc_v1_schedule_cache', JSON.stringify({
+          profile: data.profile,
+          entries: data.entries || [],
+          enrollments: data.enrollments || [],
+          attendance: data.attendance || []
+        }))
+      } catch (e) {}
 
       setLoading(false)
     }

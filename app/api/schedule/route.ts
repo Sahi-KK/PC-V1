@@ -29,49 +29,46 @@ async function getCourseMap(service: any) {
   return courseMap;
 }
 
-// GET /api/schedule?roll_no=IPM04134
+// GET /api/schedule
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const roll_no = req.nextUrl.searchParams.get('roll_no')
-  if (!roll_no) return NextResponse.json({ error: 'roll_no required' }, { status: 400 })
-
   const service = getService()
 
-  // Start course map fetch concurrently
-  const courseMapPromise = getCourseMap(service)
+  // Phase 1: Fetch Profile and CourseMap in parallel
+  const [courseMap, { data: prof }] = await Promise.all([
+    getCourseMap(service),
+    service.from('user_profiles').select('name, roll_no, email').eq('id', user.id).single()
+  ])
 
-  // Get student
-  const { data: student, error: sErr } = await service
-    .from('students')
-    .select('id, name, roll_no')
-    .eq('roll_no', roll_no)
-    .single()
-
-  if (sErr || !student) {
-    return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+  if (!prof || !prof.roll_no) {
+    return NextResponse.json({ profile: prof, student: null, entries: [], enrollments: [], attendance: [] })
   }
 
-  // Get student's course enrollments
+  // Phase 2: Fetch Student and Attendance in parallel
+  const [{ data: student }, { data: attendance }] = await Promise.all([
+    service.from('students').select('id, name, roll_no').eq('roll_no', prof.roll_no).single(),
+    supabase.from('attendance').select('calendar_entry_id, is_present').eq('user_id', user.id)
+  ])
+
+  if (!student) {
+    return NextResponse.json({ profile: prof, student: null, entries: [], enrollments: [], attendance: attendance || [] })
+  }
+
+  // Phase 3: Fetch Enrollments
   const { data: enrollments } = await service
     .from('student_courses')
     .select('course_abbr, section')
     .eq('student_id', student.id)
 
   if (!enrollments || enrollments.length === 0) {
-    return NextResponse.json({ student, entries: [], dateMetaMap: {}, enrollments: [] })
+    return NextResponse.json({ profile: prof, student, entries: [], enrollments: [], attendance: attendance || [] })
   }
 
-  const courseAbbrSectionPairs = enrollments
-
-  if (courseAbbrSectionPairs.length === 0) {
-    return NextResponse.json({ student, entries: [], dateMetaMap: {}, enrollments: [] })
-  }
-
-  // Get all calendar entries for these courses/sections
-  const orFilters = courseAbbrSectionPairs.map(
+  // Phase 4: Fetch Calendar Entries matching enrollments
+  const orFilters = enrollments.map(
     ({ course_abbr, section }) => `and(course_abbr.eq.${course_abbr},section.eq.${section})`
   ).join(',')
 
@@ -86,15 +83,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: calErr.message }, { status: 500 })
   }
 
-  // Await the concurrently fetched course map
-  const courseMap = await courseMapPromise
-
-  // Fetch attendance
-  const { data: attendance } = await supabase
-    .from('attendance')
-    .select('calendar_entry_id, is_present')
-    .eq('user_id', user.id)
-
   // Enrich entries with course info
   const enrichedEntries = entries?.map(e => ({
     ...e,
@@ -104,9 +92,10 @@ export async function GET(req: NextRequest) {
   })) || []
 
   return NextResponse.json({
+    profile: prof,
     student,
     entries: enrichedEntries,
-    enrollments: courseAbbrSectionPairs,
+    enrollments,
     attendance: attendance || []
   })
 }
