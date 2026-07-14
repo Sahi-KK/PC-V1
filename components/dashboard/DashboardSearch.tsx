@@ -63,6 +63,7 @@ export default function DashboardSearch() {
 
   useEffect(() => {
     if (searchMode === 'spoc' && spcQuery.length >= 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingSpc(true)
       fetch(`/api/spocs?q=${encodeURIComponent(spcQuery)}`)
         .then(res => res.json())
@@ -84,7 +85,9 @@ export default function DashboardSearch() {
   }, [query, allStudents])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (query.length >= 2 && suggestions.length > 0) setShowDropdown(true)
+     
     else if (query.length < 2) setShowDropdown(false)
   }, [query, suggestions.length])
 

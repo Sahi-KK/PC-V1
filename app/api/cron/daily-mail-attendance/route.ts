@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
   }
 
   // Get today's date string YYYY-MM-DD
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
+  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+  const todayStr = today.toLocaleDateString('en-CA')
   const displayDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   // 1. Get the 13 users

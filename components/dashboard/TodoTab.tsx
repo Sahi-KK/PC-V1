@@ -49,7 +49,11 @@ export default function TodoTab() {
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(() => {
+    const today = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})
+    const todayDate = new Date(today)
+    return todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + String(todayDate.getDate()).padStart(2, '0')
+  })
   const [time, setTime] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [overlapError, setOverlapError] = useState('')
@@ -58,7 +62,7 @@ export default function TodoTab() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('todos')
       .select('*')
       .eq('user_id', user.id)
@@ -70,12 +74,9 @@ export default function TodoTab() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTodos()
-    // Set default date to today
-    const today = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})
-    const todayDate = new Date(today)
-    const dateStr = todayDate.getFullYear() + '-' + String(todayDate.getMonth() + 1).padStart(2, '0') + '-' + String(todayDate.getDate()).padStart(2, '0')
-    setDate(dateStr)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleAddTodo = async (e: React.FormEvent) => {

@@ -51,9 +51,9 @@ function formatTime12Hour(timeStr: string) {
   const [start, end] = timeStr.split('-')
   if (!start || !end) return timeStr
   const format = (t: string) => {
-    let [h, m] = t.split(':')
+    const [h, m] = t.split(':')
     let hNum = parseInt(h, 10)
-    let ampm = hNum >= 12 ? 'PM' : 'AM'
+    const ampm = hNum >= 12 ? 'PM' : 'AM'
     hNum = hNum % 12 || 12
     return `${hNum}:${m} ${ampm}`
   }
@@ -128,6 +128,7 @@ export default function ProcessTab() {
       fetchProcesses()
     }
     init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function fetchProcesses() {

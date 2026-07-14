@@ -26,7 +26,8 @@ export default function CourseAttendancePage() {
   const [attendedIds, setAttendedIds] = useState<Set<string>>(new Set())
   
   const supabase = createClient()
-  const todayDate = new Date().toISOString().split('T')[0]
+  // Timezone-safe today's date (IST)
+  const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
   useEffect(() => {
     async function load() {

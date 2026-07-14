@@ -59,7 +59,7 @@ async function executeTool(name: string, args: any, today: string, callerUserId?
     } else if (week) {
       const start = new Date(today)
       const end = new Date(today); end.setDate(end.getDate() + 7)
-      query = query.gte('date', start.toISOString().split('T')[0]).lte('date', end.toISOString().split('T')[0])
+      query = query.gte('date', start.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })).lte('date', end.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }))
     } else {
       query = query.gte('date', today).limit(25)
     }
@@ -107,7 +107,7 @@ async function executeTool(name: string, args: any, today: string, callerUserId?
       query = query.eq('date', date)
     } else if (week) {
       const end = new Date(today); end.setDate(end.getDate() + 7)
-      query = query.gte('date', today).lte('date', end.toISOString().split('T')[0])
+      query = query.gte('date', today).lte('date', end.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }))
     } else {
       query = query.gte('date', today).limit(20)
     }
@@ -422,7 +422,8 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     const callerUserId = user?.id
 
-    const today = new Date().toISOString().split('T')[0]
+    // Timezone-safe today's date (IST)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
     const systemPrompt = `You are the AI Assistant for the PC-V1 Academic Portal at IIM Rohtak.
 Today's date is ${today} (use this for "today", "tomorrow", "this week" queries).
@@ -451,7 +452,7 @@ TOOL USAGE RULES:
 
 When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.`
 
-    let messages: any[] = [
+    const messages: any[] = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt }
     ]

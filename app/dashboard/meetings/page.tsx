@@ -15,9 +15,9 @@ function formatTime12Hour(timeStr: string) {
   if (timeStr === 'LUNCH') return 'Lunch'
   const [start, end] = timeStr.split('-')
   const format = (t: string) => {
-    let [h, m] = t.split(':')
+    const [h, m] = t.split(':')
     let hNum = parseInt(h, 10)
-    let ampm = hNum >= 12 ? 'PM' : 'AM'
+    const ampm = hNum >= 12 ? 'PM' : 'AM'
     hNum = hNum % 12 || 12
     return `${hNum}:${m} ${ampm}`
   }

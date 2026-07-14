@@ -1,5 +1,6 @@
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
+/* eslint-disable @typescript-eslint/no-require-imports */
 const qrcode = require('qrcode-terminal');
 
 const app = express();

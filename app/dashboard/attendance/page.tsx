@@ -21,7 +21,8 @@ export default function AttendancePage() {
   const [courses, setCourses] = useState<{abbr: string, fullName: string, attended: number, total: number, percentage: number}[]>([])
   
   const supabase = createClient()
-  const todayDate = new Date().toISOString().split('T')[0]
+  // Timezone-safe today's date (IST)
+  const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
   useEffect(() => {
     async function load() {

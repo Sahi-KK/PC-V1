@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     const userEvents = userTodos[user.id]
     if (!userEvents || userEvents.length === 0) continue
 
-    let eventsHtml = userEvents.map(e => `
+    const eventsHtml = userEvents.map(e => `
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
         <h3 style="margin: 0 0 4px 0; color: #0f172a; font-size: 16px;">${e.title}</h3>
         ${e.description ? `<p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;">${e.description}</p>` : ''}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function doPost(e) {
   try {
     // Parse the incoming JSON payload

@@ -31,7 +31,7 @@ export default function ProfileTab() {
         const { data: student } = await supabase.from('students').select('id').eq('roll_no', prof.roll_no).single()
         if (student) {
           const { data: enrollments } = await supabase.from('student_courses').select('course_abbr').eq('student_id', student.id)
-          const abbrs = enrollments?.map((e: any) => e.course_abbr).filter((a: string) => a !== 'CW-') || []
+          const abbrs = enrollments?.map((e: {course_abbr: string}) => e.course_abbr).filter((a: string) => a !== 'CW-') || []
           if (abbrs.length > 0) {
             const { data: coursesData } = await supabase.from('courses').select('abbr, full_name, faculty').in('abbr', abbrs)
             if (coursesData) setCourses(coursesData)
@@ -41,6 +41,7 @@ export default function ProfileTab() {
       setLoading(false)
     }
     fetchProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSignOut() {
@@ -63,6 +64,7 @@ export default function ProfileTab() {
         setDeleting(false)
       }
     } catch (e) {
+      console.error(e)
       alert('Error connecting to server.')
       setDeleting(false)
     }

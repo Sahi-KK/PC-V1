@@ -17,31 +17,6 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    fetchNotifications()
-
-    // Request Notification permission for Web Push
-    if ('Notification' in window && 'serviceWorker' in navigator) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            subscribeUserToPush()
-          }
-        })
-      } else if (Notification.permission === 'granted') {
-        subscribeUserToPush()
-      }
-    }
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications')
@@ -88,6 +63,31 @@ export default function NotificationBell() {
   const toggleDropdown = () => {
     setIsOpen(!isOpen)
   }
+
+  useEffect(() => {
+    fetchNotifications()
+
+    // Request Notification permission for Web Push
+    if ('Notification' in window && 'serviceWorker' in navigator) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            subscribeUserToPush()
+          }
+        })
+      } else if (Notification.permission === 'granted') {
+        subscribeUserToPush()
+      }
+    }
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <div className="notification-bell-container" ref={dropdownRef} style={{ position: 'relative' }}>

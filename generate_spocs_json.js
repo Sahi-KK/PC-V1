@@ -1,4 +1,5 @@
-const fs = require('fs')
+/* eslint-disable @typescript-eslint/no-require-imports */
+const fs = require('fs');
 const xlsx = require('xlsx')
 
 function parseSheet(file, batch) {

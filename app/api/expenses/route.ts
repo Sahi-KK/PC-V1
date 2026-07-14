@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       description,
       total_amount,
       paid_by: user.id,
-      date: date || new Date().toISOString().split('T')[0]
+      date: date || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
     })
     .select()
     .single()
