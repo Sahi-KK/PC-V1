@@ -26,11 +26,12 @@ function formatTime12Hour(timeStr: string) {
 
 function buildTermDates() {
   const dates: string[] = []
-  const cur = new Date(TERM_START)
-  const end = new Date(TERM_END)
+  // Use UTC noon to avoid any timezone day-shift issues
+  const cur = new Date(Date.UTC(2026, 5, 12, 12, 0, 0))  // 2026-06-12 UTC noon
+  const end = new Date(Date.UTC(2026, 8, 3, 12, 0, 0))   // 2026-09-03 UTC noon
   while (cur <= end) {
     dates.push(cur.toISOString().split('T')[0])
-    cur.setDate(cur.getDate() + 1)
+    cur.setUTCDate(cur.getUTCDate() + 1)
   }
   return dates
 }
@@ -38,14 +39,15 @@ function buildTermDates() {
 const ALL_DATES = buildTermDates()
 
 const DATE_STRIP_DATA = ALL_DATES.map(date => {
-  const jsDate = new Date(date + 'T00:00:00')
-  const isSunday = jsDate.getDay() === 0
+  // Use UTC noon so getUTCDay() is always the correct weekday for this date string
+  const jsDate = new Date(date + 'T12:00:00Z')
+  const isSunday = jsDate.getUTCDay() === 0
   const isHoliday = date === INDEPENDENCE_DAY || date === MUHARRAM
   const isExamPeriod = date >= EXAM_START
 
   return {
     date,
-    day_of_week: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][jsDate.getDay()],
+    day_of_week: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][jsDate.getUTCDay()],
     is_sunday: isSunday,
     is_holiday: isHoliday,
     is_exam_period: isExamPeriod,
@@ -55,13 +57,15 @@ const DATE_STRIP_DATA = ALL_DATES.map(date => {
 })
 
 const TIME_ORDER = [
-  '10:20-11:35','11:55-1:10',
+  '10:20-11:35','11:55-13:10',
   '14:30-15:45','16:05-17:20','17:40-18:55',
   '19:15-20:30','20:50-22:05','22:25-23:40'
 ]
 
 export default function MeetingsPage() {
-  const todayDate = new Date().toISOString().split('T')[0]
+  // Timezone-safe: build today's date from UTC parts to avoid IST-vs-UTC day shift
+  const now = new Date()
+  const todayDate = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`
   const [date, setDate] = useState(() => {
     if (todayDate >= TERM_START && todayDate <= TERM_END) return todayDate
     return TERM_START
