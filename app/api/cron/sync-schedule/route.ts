@@ -70,26 +70,27 @@ function parseCell(val: string): { course_abbr: string, session_number: number, 
   return { course_abbr, session_number, faculty_abbr }
 }
 
-// Parse dates like "12-Jun-26", "12-Jun-2026"
+// Month abbreviation → zero-padded month number (timezone-safe, no Date object needed)
+const MONTH_MAP: Record<string, string> = {
+  jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+}
+
+// Parse dates like "12-Jun-26" or "12-Jun-2026" → "2026-06-12"
+// IMPORTANT: builds the ISO string directly — no Date() constructor — fully timezone-safe.
 function parseSheetDate(val: string): string | null {
   if (!val || !val.trim()) return null
   const v = val.trim()
   
-  // Try "D-Mon-YY" or "D-Mon-YYYY" format first
+  // Match "D-Mon-YY" or "D-Mon-YYYY"
   const match = v.match(/^(\d{1,2})-([A-Za-z]{3,})-(\d{2,4})$/)
   if (match) {
-    const year = parseInt(match[3])
+    const day   = match[1].padStart(2, '0')
+    const month = MONTH_MAP[match[2].substring(0, 3).toLowerCase()]
+    if (!month) return null
+    const year    = parseInt(match[3])
     const fullYear = year < 100 ? 2000 + year : year
-    const d = new Date(`${match[2]} ${match[1]}, ${fullYear}`)
-    if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0]
-    }
-  }
-  
-  // Fallback to direct JS parse
-  const d2 = new Date(v)
-  if (!isNaN(d2.getTime())) {
-    return d2.toISOString().split('T')[0]
+    return `${fullYear}-${month}-${day}`   // e.g. "2026-06-12" — no timezone risk
   }
   
   return null
@@ -152,8 +153,9 @@ export async function GET(request: Request) {
         const parsed = parseCell(cellValue)
         if (!parsed) continue
         
-        const dt = new Date(currentDate)
-        const dayOfWeek = DAY_NAMES[dt.getDay()]
+        // Use noon UTC to ensure getUTCDay() is always the correct calendar day
+        const dt = new Date(currentDate + 'T12:00:00Z')
+        const dayOfWeek = DAY_NAMES[dt.getUTCDay()]
         const key = `${currentDate}_${timeSlot}_${sect}_${parsed.course_abbr}`
         
         groundTruth[key] = {
