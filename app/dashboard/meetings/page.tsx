@@ -63,9 +63,9 @@ const TIME_ORDER = [
 ]
 
 export default function MeetingsPage() {
-  // Timezone-safe: build today's date from UTC parts to avoid IST-vs-UTC day shift
+  // Timezone-safe: force IST today's date
   const now = new Date()
-  const todayDate = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`
+  const todayDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
   const [date, setDate] = useState(() => {
     if (todayDate >= TERM_START && todayDate <= TERM_END) return todayDate
     return TERM_START

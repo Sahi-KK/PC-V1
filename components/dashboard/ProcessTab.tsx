@@ -100,9 +100,9 @@ export default function ProcessTab() {
   const [currentUserId, setCurrentUserId] = useState<string>('')
   
   // Form State
-  // Timezone-safe today's date
+  // Timezone-safe today's date (IST)
   const now = new Date()
-  const todayDate = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`
+  const todayDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
   const [date, setDate] = useState('')
   const [name, setName] = useState('')
   const [selectedSlot, setSelectedSlot] = useState('')
