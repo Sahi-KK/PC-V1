@@ -104,6 +104,7 @@ const FOOD_ICONS = {
 }
 
 function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolean }) {
+  const [showFullMenu, setShowFullMenu] = useState(false)
   const jsDate = new Date(dateStr + 'T00:00:00')
   const dayName = DAY_NAMES[jsDate.getDay()] as keyof typeof MESS_MENU
   const menu = MESS_MENU[dayName]
@@ -123,9 +124,16 @@ function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolea
         <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
           <span style={{ fontSize: '16px' }}>🍽️</span> {isToday ? "Today's Menu" : `${dayName}'s Menu`}
         </h3>
-        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-subtle)', padding: '4px 8px', borderRadius: '100px' }}>
-          Scroll <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </div>
+        <button 
+          onClick={() => setShowFullMenu(true)}
+          style={{ 
+            fontSize: '11px', fontWeight: 600, color: 'var(--accent-primary)', 
+            display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-subtle)', 
+            padding: '6px 12px', borderRadius: '100px', border: '1px solid var(--border-subtle)', 
+            cursor: 'pointer', outline: 'none'
+          }}>
+          View full menu <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
       </div>
       <div style={{ 
         display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', margin: '0 -4px', padding: '0 4px 8px 4px',
@@ -147,6 +155,45 @@ function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolea
           </div>
         ))}
       </div>
+
+      {showFullMenu && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px'
+        }} onClick={() => setShowFullMenu(false)}>
+          <div style={{
+            background: 'var(--bg-surface)', borderRadius: 'var(--radius-xl)',
+            width: '100%', maxWidth: '600px', maxHeight: '85vh', overflowY: 'auto',
+            padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', position: 'relative',
+            border: '1px solid var(--border-subtle)'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'sticky', top: '-24px', background: 'var(--bg-surface)', zIndex: 1, padding: '24px 0 16px 0', borderBottom: '1px solid var(--border-subtle)', marginTop: '-24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Weekly Mess Menu</h2>
+              <button onClick={() => setShowFullMenu(false)} style={{ background: 'var(--bg-subtle)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+              {(Object.keys(MESS_MENU) as Array<keyof typeof MESS_MENU>).map(day => (
+                <div key={day} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--accent-primary)', borderBottom: '2px solid var(--bg-subtle)', paddingBottom: '6px' }}>{day}</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+                    {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as const).map(meal => (
+                      <div key={meal} style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-md)' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, marginBottom: '6px', color: 'var(--text-primary)' }}>{FOOD_ICONS[meal]} {meal}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{MESS_MENU[day][meal]}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
