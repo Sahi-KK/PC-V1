@@ -51,6 +51,96 @@ const TIME_ORDER = [
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
+const MESS_MENU = {
+  Sunday: {
+    Breakfast: "Chocos, Banana, Bhurji, Dosa, Aaloo masala + Chutney + Sambhar",
+    Lunch: "Toor Dal, Matar Paneer, Choco Icecream, Veg/Chicken Biryani, Raita",
+    Snacks: "Samosa, Imli Chutney + Mint Chutney",
+    Dinner: "Dal Makhani, Tori Chana/Aaloo, Plain Rice, Roti, Salad, Gulab Jamun"
+  },
+  Monday: {
+    Breakfast: "Cornflakes, Papaya, Bhurji, Uttapam, Sambhar + Chutney",
+    Lunch: "Kadhi Pakoda, Aaloo Jeera, Jeera Rice, Cucumber Raita, Roti",
+    Snacks: "Bread Pakoda, Ketchup + Mint Chutney",
+    Dinner: "Masoor Dal, Chicken Do Pyaza, Paneer Lababdar, Tawa Pulao, Custard"
+  },
+  Tuesday: {
+    Breakfast: "Chocos, Fruit Chat, Boiled eggs, Paratha, Matar Sabzi",
+    Lunch: "Daal Tadka, Aaloo Matar Sabzi, Jeera Rice, Plain Dahi, Methi Puri",
+    Snacks: "Chowmein/Maggi, Ketchup",
+    Dinner: "Urad Dal, Aaloo Palwal, Jeera Rice, Roti, Besan Barfi/Boondi"
+  },
+  Wednesday: {
+    Breakfast: "Cornflakes, Banana, Masala Omelette, Idli, Sambhar + Chutney",
+    Lunch: "Arhar Dal, Chicken Chilly, Veg Manchurian, Fried Rice, Pineapple Raita",
+    Snacks: "Bhel Puri, Ketchup + Mint Chutney",
+    Dinner: "Daal Palak, Lauki Kofta, Plain Rice, Roti, Jalebi"
+  },
+  Thursday: {
+    Breakfast: "Cornflakes, Papaya, Bhurji, Aaloo Pyaz Paratha, Curd + Pickle",
+    Lunch: "Amritsari Chole, Plain Rice, Chaach, Bhature",
+    Snacks: "Aaloo Pakode, Ketchup + Mint Chutney",
+    Dinner: "Lehsuni Dal, Gatte ki Sabzi, Matar Pulao, Roti, Ice Cream"
+  },
+  Friday: {
+    Breakfast: "Cornflakes, Fruit Chat, Masala Omelette, Medu Vada, Sambhar",
+    Lunch: "Mixed Dal, Dum Aaloo, Plain Rice, Boondi Raita, Roti",
+    Snacks: "Pav Bhaji/Vada Pav, Lemon/Ketchup+Mint Chutney",
+    Dinner: "Masoor Dal, Chicken Do Pyaza, Paneer Lababdar, Plain Rice, Kheer"
+  },
+  Saturday: {
+    Breakfast: "Chocos, Papaya, Boiled eggs, Aaloo Pyaaz Paratha, Matar Sabzi",
+    Lunch: "Rajma, Lauki, Plain Rice, Dahi vada, Roti",
+    Snacks: "Pasta, Ketchup",
+    Dinner: "Urad Dal, Cabbage matar Aaloo, Jeera Rice, Roti, Halwa"
+  }
+}
+
+const FOOD_ICONS = {
+  Breakfast: '🌅',
+  Lunch: '🍲',
+  Snacks: '🍟',
+  Dinner: '🍛'
+}
+
+function TodayMessMenu({ dateStr }: { dateStr: string }) {
+  const jsDate = new Date(dateStr + 'T00:00:00')
+  const dayName = DAY_NAMES[jsDate.getDay()] as keyof typeof MESS_MENU
+  const menu = MESS_MENU[dayName]
+  
+  if (!menu) return null
+
+  return (
+    <div style={{
+      background: 'var(--bg-surface)',
+      borderRadius: 'var(--radius-xl)', padding: '16px', marginBottom: '24px',
+      boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)'
+    }}>
+      <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 12px 0' }}>
+        <span style={{ fontSize: '16px' }}>🍽️</span> Mess Menu
+      </h3>
+      <div style={{ 
+        display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px',
+        scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' 
+      }}>
+        {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as const).map(meal => (
+          <div key={meal} style={{ 
+            background: 'var(--bg-subtle)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', 
+            border: '1px solid var(--border-subtle)', minWidth: '220px', flex: '0 0 auto' 
+          }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '16px' }}>{FOOD_ICONS[meal]}</span> {meal}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: 500, whiteSpace: 'normal' }}>
+              {menu[meal]}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function HomeTab() {
   const router = useRouter()
   const supabase = createClient()
@@ -348,6 +438,8 @@ export default function HomeTab() {
         {isHoliday && <span className="schedule-badge schedule-badge-holiday">{holidayName}</span>}
         {isExam && !isHoliday && <span className="schedule-badge schedule-badge-exam">End-Term Exams</span>}
       </div>
+
+      <TodayMessMenu dateStr={selectedDate} />
 
       {dayClasses.length === 0 ? (
         <div className="no-classes">
