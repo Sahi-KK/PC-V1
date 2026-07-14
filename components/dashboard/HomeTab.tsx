@@ -103,7 +103,7 @@ const FOOD_ICONS = {
   Dinner: '🍛'
 }
 
-function TodayMessMenu({ dateStr }: { dateStr: string }) {
+function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolean }) {
   const jsDate = new Date(dateStr + 'T00:00:00')
   const dayName = DAY_NAMES[jsDate.getDay()] as keyof typeof MESS_MENU
   const menu = MESS_MENU[dayName]
@@ -113,13 +113,14 @@ function TodayMessMenu({ dateStr }: { dateStr: string }) {
   return (
     <div style={{
       background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-xl)', padding: '16px', marginTop: '24px', marginBottom: '24px',
+      borderRadius: 'var(--radius-xl)', padding: '24px', 
       boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)',
-      position: 'relative'
+      position: 'relative',
+      display: 'flex', flexDirection: 'column', height: '100%'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
-          <span style={{ fontSize: '16px' }}>🍽️</span> {dayName}'s Menu
+          <span style={{ fontSize: '16px' }}>🍽️</span> {isToday ? "Today's Menu" : `${dayName}'s Menu`}
         </h3>
         <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-subtle)', padding: '4px 8px', borderRadius: '100px' }}>
           Scroll <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -127,12 +128,13 @@ function TodayMessMenu({ dateStr }: { dateStr: string }) {
       </div>
       <div style={{ 
         display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', margin: '0 -4px', padding: '0 4px 8px 4px',
-        scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' 
+        scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', flex: 1
       }}>
         {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as const).map(meal => (
           <div key={meal} style={{ 
             background: 'var(--bg-subtle)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', 
-            border: '1px solid var(--border-subtle)', minWidth: '220px', flex: '0 0 auto' 
+            border: '1px solid var(--border-subtle)', minWidth: '200px', flex: '0 0 auto',
+            display: 'flex', flexDirection: 'column'
           }}>
             <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '16px' }}>{FOOD_ICONS[meal]}</span> {meal}
@@ -395,34 +397,38 @@ export default function HomeTab() {
         </div>
       )}
 
-      {nextClassInfo && nextClassInfo.startsInMs < 24 * 60 * 60 * 1000 && (
-        <div style={{
-          background: 'var(--bg-surface)',
-          borderRadius: 'var(--radius-xl)', padding: '24px', marginBottom: '24px',
-          boxShadow: 'var(--shadow-card)', position: 'relative', overflow: 'hidden',
-          border: '1px solid var(--border-subtle)'
-        }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '6px', background: 'var(--gradient-primary)' }} />
-          <div style={{ paddingLeft: '8px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', marginBottom: '8px' }}>
-              Next Class
-            </div>
-            <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-              {nextClassInfo.course}
-            </div>
-            <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                {nextClassInfo.time}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                {nextClassInfo.lr}
-              </span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+        {nextClassInfo && nextClassInfo.startsInMs < 24 * 60 * 60 * 1000 && (
+          <div style={{
+            background: 'var(--bg-surface)',
+            borderRadius: 'var(--radius-xl)', padding: '24px',
+            boxShadow: 'var(--shadow-card)', position: 'relative', overflow: 'hidden',
+            border: '1px solid var(--border-subtle)',
+            display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '6px', background: 'var(--gradient-primary)' }} />
+            <div style={{ paddingLeft: '12px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', marginBottom: '8px' }}>
+                Next Class
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '12px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                {nextClassInfo.course}
+              </div>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  {nextClassInfo.time}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  {nextClassInfo.lr}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        <MessMenuWidget dateStr={selectedDate} isToday={selectedDate === todayDate} />
+      </div>
 
       <div style={{ margin: '0 -20px 24px -20px' }}>
         <DateStrip
@@ -440,9 +446,6 @@ export default function HomeTab() {
             {DAY_NAMES[selDate.getDay()]}, {selDate.getDate()} {MONTH_NAMES[selDate.getMonth()]} {selDate.getFullYear()}
           </span>
         </div>
-        {isSunday && <span className="schedule-badge schedule-badge-sunday">Sunday</span>}
-        {isHoliday && <span className="schedule-badge schedule-badge-holiday">{holidayName}</span>}
-        {isExam && !isHoliday && <span className="schedule-badge schedule-badge-exam">End-Term Exams</span>}
       </div>
 
       {dayClasses.length === 0 ? (
@@ -495,8 +498,6 @@ export default function HomeTab() {
           })}
         </div>
       )}
-      
-      <TodayMessMenu dateStr={selectedDate} />
     </>
   )
 }
