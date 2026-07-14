@@ -8,7 +8,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1bnjl5IXxER0pWvxG75TswZyMxm7Gxk4S4UCUxQKikzc/export?format=csv'
+// Use sheet name param to always target the correct tab "PGPO Term IV"
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1bnjl5IXxER0pWvxG75TswZyMxm7Gxk4S4UCUxQKikzc/export?format=csv&sheet=PGPO+Term+IV'
 const REAL_HOLIDAYS = new Set(['2026-06-26', '2026-08-15'])
 const EXAM_START = '2026-08-23'
 
@@ -17,6 +18,7 @@ const DAY_NAMES: Record<number, string> = {
   4: 'Thursday', 5: 'Friday', 6: 'Saturday'
 }
 
+// Column index → time slot label (col 5 is LUNCH, skip it)
 const TIME_SLOTS: Record<number, string> = {
   2: '08:45-10:00',
   3: '10:20-11:35',
@@ -36,59 +38,118 @@ const SECTION_LR: Record<string, string> = {
   'D': 'LR 06'
 }
 
-function parseCell(val: string) {
+function parseCell(val: string): { course_abbr: string, session_number: number, faculty_abbr: string } | null {
   if (!val) return null
   val = val.trim()
-  if (['nan', '', 'LUNCH', 'SUNDAY', 'Sunday'].includes(val) || val.includes('End Term') || val.startsWith('Term') || val.startsWith('Date') || val.startsWith('Section')) {
-    return null
+  if (!val) return null
+  
+  // Skip non-class values
+  const upper = val.toUpperCase()
+  if (['LUNCH', 'SUNDAY', 'NAN'].includes(upper)) return null
+  if (val.includes('End Term') || val.startsWith('Term') || val.startsWith('Section')) return null
+  
+  // Extract faculty abbreviation from parentheses (handles missing closing paren)
+  const parenMatch = val.match(/\(([^)]+)\)?$/)
+  if (!parenMatch) return null
+  const faculty_abbr = parenMatch[1].trim()
+  
+  // Remove the (faculty) part
+  const withoutFaculty = val.replace(/\s*\([^)]+\)?$/, '').trim()
+  
+  // Find the last number in the remaining string — that's the session number
+  // This correctly handles: "L&D 1", "Ind 4.0 1", "CW- 1", "IBS7", "BA 1", "MBPET 14"
+  const lastNumMatch = withoutFaculty.match(/^(.*?)(\d+)\s*$/)
+  if (!lastNumMatch) return null
+  
+  const course_abbr = lastNumMatch[1].trim()
+  const session_number = parseInt(lastNumMatch[2])
+  
+  if (!course_abbr || course_abbr.length === 0) return null
+  if (isNaN(session_number) || session_number <= 0) return null
+  
+  return { course_abbr, session_number, faculty_abbr }
+}
+
+// Parse dates like "12-Jun-26", "12-Jun-2026"
+function parseSheetDate(val: string): string | null {
+  if (!val || !val.trim()) return null
+  const v = val.trim()
+  
+  // Try "D-Mon-YY" or "D-Mon-YYYY" format first
+  const match = v.match(/^(\d{1,2})-([A-Za-z]{3,})-(\d{2,4})$/)
+  if (match) {
+    const year = parseInt(match[3])
+    const fullYear = year < 100 ? 2000 + year : year
+    const d = new Date(`${match[2]} ${match[1]}, ${fullYear}`)
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0]
+    }
   }
   
-  // Lenient regex to handle typos like 'IBS7 (PD)' or 'MBPET 14 (RN'
-  const match = val.match(/^([a-zA-Z\s]+?)\s*(\d+)\s*\(([^)]+)\)?\s*$/)
-  if (!match) return null
-  
-  return {
-    course_abbr: match[1].trim(),
-    session_number: parseInt(match[2]),
-    faculty_abbr: match[3].trim()
+  // Fallback to direct JS parse
+  const d2 = new Date(v)
+  if (!isNaN(d2.getTime())) {
+    return d2.toISOString().split('T')[0]
   }
+  
+  return null
 }
 
 export async function GET(request: Request) {
   try {
-    // 1. Fetch live CSV
-    const response = await fetch(SHEET_URL)
-    if (!response.ok) throw new Error('Failed to fetch Google Sheet')
+    // 1. Fetch live CSV from the correct "PGPO Term IV" tab
+    const response = await fetch(SHEET_URL, { cache: 'no-store' })
+    if (!response.ok) throw new Error(`Failed to fetch Google Sheet: ${response.status}`)
     const csvText = await response.text()
     
-    // 2. Parse CSV
-    const { data: rows } = Papa.parse<string[]>(csvText, { skipEmptyLines: true })
+    // 2. Parse CSV (do NOT skip empty lines — needed to preserve row structure)
+    const { data: rows } = Papa.parse<string[]>(csvText, { skipEmptyLines: false })
     
     const groundTruth: Record<string, any> = {}
     let currentDate: string | null = null
     
     // 3. Extract Schedule
-    for (let idx = 2; idx < rows.length; idx++) {
+    // Header structure:
+    //   Row 0: Section labels
+    //   Row 1: Second header row  
+    //   Row 2: Time slot labels (,Section,08:45-10:00,...)
+    //   Row 3+: Data rows
+    //
+    // Data row format:
+    //   col[0] = date (e.g., "12-Jun-26") on first section row, OR day name (e.g., "Friday") OR empty
+    //   col[1] = section (A/B/C/D) OR holiday name
+    //   col[2..11] = class cells
+    
+    for (let idx = 3; idx < rows.length; idx++) {
       const row = rows[idx]
-      const dateVal = row[0]?.trim()
-      const sect = row[1]?.trim() || ''
+      if (!row || row.length < 2) continue
       
-      if (dateVal && dateVal !== '') {
-        const parsedDate = new Date(dateVal)
-        if (!isNaN(parsedDate.getTime())) {
-          currentDate = parsedDate.toISOString().split('T')[0]
-        } else if (dateVal.includes('End Term')) {
-          break
+      const col0 = row[0]?.trim() || ''
+      const col1 = row[1]?.trim() || ''
+      
+      // Try to parse date from col0
+      if (col0) {
+        const parsed = parseSheetDate(col0)
+        if (parsed) {
+          currentDate = parsed
+        } else if (col0.toLowerCase().includes('end term') || col0.toLowerCase().includes('exam')) {
+          break // Stop at end of term
         }
+        // If col0 is a day name ("Friday", "Saturday") — just a sub-row, keep currentDate
       }
       
-      if (!currentDate || !['A', 'B', 'C', 'D'].includes(sect)) continue
+      if (!currentDate) continue
+      
+      // Must be a valid section row
+      if (!['A', 'B', 'C', 'D'].includes(col1)) continue
+      const sect = col1
       
       for (const [colIdxStr, timeSlot] of Object.entries(TIME_SLOTS)) {
         const colIdx = parseInt(colIdxStr)
         const cellValue = row[colIdx]
-        const parsed = parseCell(cellValue)
+        if (!cellValue || !cellValue.trim()) continue
         
+        const parsed = parseCell(cellValue)
         if (!parsed) continue
         
         const dt = new Date(currentDate)
@@ -143,9 +204,8 @@ export async function GET(request: Request) {
     let keptCount = 0
     let insertedCount = 0
 
-    // 6. Safe Deletions (Protect Attendance)
+    // 6. Safe Deletions (NEVER delete if attendance exists)
     for (const entry of toRemove) {
-      // Check for attendance
       const { data: attendance } = await supabase
         .from('attendance')
         .select('id')
@@ -154,11 +214,10 @@ export async function GET(request: Request) {
 
       if (attendance && attendance.length > 0) {
         keptCount++
-        console.warn(`[SYNC] WARNING: Refused to delete ${entry.date} ${entry.class_code} because attendance exists!`)
-        continue // DO NOT DELETE
+        console.warn(`[SYNC] Refused to delete ${entry.date} ${entry.class_code} — attendance exists!`)
+        continue
       }
 
-      // Safe to delete
       const { error: delError } = await supabase
         .from('calendar_entries')
         .delete()
@@ -174,11 +233,17 @@ export async function GET(request: Request) {
         .insert(toAdd)
       
       if (!insError) insertedCount = toAdd.length
+      else console.error('[SYNC] Insert error:', insError)
     }
 
     return NextResponse.json({
       success: true,
       message: 'Schedule Sync Completed',
+      debug: {
+        parsed_from_sheet: Object.keys(groundTruth).length,
+        in_db_before: dbEntries.length,
+        sample_keys: Object.keys(groundTruth).slice(0, 8)
+      },
       stats: {
         added: insertedCount,
         removed: deletedCount,
@@ -192,3 +257,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
+
