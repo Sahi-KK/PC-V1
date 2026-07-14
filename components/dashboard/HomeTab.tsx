@@ -112,9 +112,10 @@ function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolea
 
   return (
     <div style={{
-      background: 'var(--bg-surface)',
+      background: 'linear-gradient(145deg, var(--bg-surface), var(--bg-subtle))',
       borderRadius: 'var(--radius-xl)', padding: '24px', 
-      boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)',
+      boxShadow: '0 12px 32px -4px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,0.5)', 
+      border: '1px solid var(--border-subtle)',
       position: 'relative',
       display: 'flex', flexDirection: 'column', height: '100%'
     }}>
@@ -132,9 +133,10 @@ function MessMenuWidget({ dateStr, isToday }: { dateStr: string, isToday: boolea
       }}>
         {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as const).map(meal => (
           <div key={meal} style={{ 
-            background: 'var(--bg-subtle)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', 
+            background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: 'var(--radius-lg)', 
             border: '1px solid var(--border-subtle)', minWidth: '200px', flex: '0 0 auto',
-            display: 'flex', flexDirection: 'column'
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.04), inset 0 2px 8px rgba(0,0,0,0.02)'
           }}>
             <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '16px' }}>{FOOD_ICONS[meal]}</span> {meal}
@@ -400,9 +402,10 @@ export default function HomeTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '24px' }}>
         {nextClassInfo && nextClassInfo.startsInMs < 24 * 60 * 60 * 1000 && (
           <div style={{
-            background: 'var(--bg-surface)',
+            background: 'linear-gradient(145deg, var(--bg-surface), var(--bg-subtle))',
             borderRadius: 'var(--radius-xl)', padding: '24px',
-            boxShadow: 'var(--shadow-card)', position: 'relative', overflow: 'hidden',
+            boxShadow: '0 12px 32px -4px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,0.5)', 
+            position: 'relative', overflow: 'hidden',
             border: '1px solid var(--border-subtle)',
             display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center'
           }}>
