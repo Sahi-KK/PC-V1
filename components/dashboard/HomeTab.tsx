@@ -113,14 +113,20 @@ function TodayMessMenu({ dateStr }: { dateStr: string }) {
   return (
     <div style={{
       background: 'var(--bg-surface)',
-      borderRadius: 'var(--radius-xl)', padding: '16px', marginBottom: '24px',
-      boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)'
+      borderRadius: 'var(--radius-xl)', padding: '16px', marginTop: '24px', marginBottom: '24px',
+      boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)',
+      position: 'relative'
     }}>
-      <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 12px 0' }}>
-        <span style={{ fontSize: '16px' }}>🍽️</span> Mess Menu
-      </h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+          <span style={{ fontSize: '16px' }}>🍽️</span> {dayName}'s Menu
+        </h3>
+        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-subtle)', padding: '4px 8px', borderRadius: '100px' }}>
+          Scroll <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
       <div style={{ 
-        display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px',
+        display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', margin: '0 -4px', padding: '0 4px 8px 4px',
         scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' 
       }}>
         {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as const).map(meal => (
@@ -439,8 +445,6 @@ export default function HomeTab() {
         {isExam && !isHoliday && <span className="schedule-badge schedule-badge-exam">End-Term Exams</span>}
       </div>
 
-      <TodayMessMenu dateStr={selectedDate} />
-
       {dayClasses.length === 0 ? (
         <div className="no-classes">
           <div className="no-classes-text" style={{ fontSize: '16px', fontWeight: 600 }}>
@@ -491,6 +495,8 @@ export default function HomeTab() {
           })}
         </div>
       )}
+      
+      <TodayMessMenu dateStr={selectedDate} />
     </>
   )
 }
