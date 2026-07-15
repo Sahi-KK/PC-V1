@@ -84,10 +84,12 @@ export default function ProfileTab() {
 
       {profile && (
         <div style={{
-          background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-xl)',
-          boxShadow: 'var(--shadow-card)', marginBottom: '32px', border: '1px solid var(--border-subtle)',
-          display: 'flex', gap: '20px', alignItems: 'center'
+          background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          padding: '24px', borderRadius: 'var(--radius-xl)',
+          boxShadow: 'var(--shadow-elevated)', marginBottom: '32px', border: '1px solid var(--border-subtle)',
+          display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', overflow: 'hidden'
         }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'var(--gradient-primary)' }} />
           <div style={{
             width: '80px', height: '80px', background: 'var(--gradient-primary)',
             borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -104,16 +106,17 @@ export default function ProfileTab() {
       )}
 
       <div style={{
-        background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-xl)',
-        boxShadow: 'var(--shadow-card)', marginBottom: '32px', border: '1px solid var(--border-subtle)'
+        background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        padding: '24px', borderRadius: 'var(--radius-xl)',
+        boxShadow: 'var(--shadow-elevated)', marginBottom: '32px', border: '1px solid var(--border-subtle)'
       }}>
         <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Enrolled Subjects</h2>
         {courses.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {courses.map(c => (
               <div key={c.abbr} style={{
-                padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-subtle)',
-                background: 'var(--bg-body)'
+                padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)',
+                background: 'rgba(255, 255, 255, 0.02)'
               }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--accent-primary)', marginBottom: '4px' }}>{c.abbr}</div>
                 <div style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text-primary)' }}>{c.full_name}</div>
@@ -126,13 +129,44 @@ export default function ProfileTab() {
         )}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{
+        background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        padding: '24px', borderRadius: 'var(--radius-xl)',
+        boxShadow: 'var(--shadow-elevated)', marginBottom: '32px', border: '1px solid var(--border-subtle)'
+      }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>App Features & Use Cases</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          {[
+            { icon: '📅', title: 'Smart Academic Calendar', desc: 'Automated schedule sync, timezone management, and timeline views.' },
+            { icon: '📊', title: 'Attendance Tracker', desc: 'Live tracking of proxies vs. physical presence across all courses.' },
+            { icon: '🍽️', title: 'Mess Menu', desc: 'Full weekly mess menu with quick glances at today’s meals.' },
+            { icon: '💰', title: 'Expenses Manager', desc: 'Track common shared expenses, late-night canteen bills, or group travel.' },
+            { icon: '📚', title: 'Study Materials', desc: 'Centralized access to shared class notes and presentations.' },
+            { icon: '🤝', title: 'SPOC Availability', desc: 'Check when student point-of-contacts are available for immediate help.' },
+            { icon: '🤖', title: 'AI Assistant', desc: 'Ask campus-related questions and get quick context-aware answers.' },
+            { icon: '🔔', title: 'Push Notifications', desc: 'Receive instant alerts for upcoming classes, events, or deadlines.' }
+          ].map((feat, i) => (
+            <div key={i} style={{
+              padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)',
+              background: 'rgba(255, 255, 255, 0.02)', display: 'flex', gap: '12px', alignItems: 'flex-start'
+            }}>
+              <div style={{ fontSize: '20px', background: 'var(--bg-body)', padding: '8px', borderRadius: 'var(--radius-sm)' }}>{feat.icon}</div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>{feat.title}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{feat.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
         <button 
           onClick={handleSignOut}
           style={{
-            padding: '14px', borderRadius: '8px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+            padding: '16px', borderRadius: 'var(--radius-lg)', background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)',
             color: 'var(--text-primary)', fontWeight: 600, fontSize: '15px', cursor: 'pointer', textAlign: 'center',
-            boxShadow: 'var(--shadow-sm)'
+            boxShadow: 'var(--shadow-sm)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)'
           }}
         >
           Sign Out
@@ -141,7 +175,7 @@ export default function ProfileTab() {
         <button 
           onClick={handleDeleteAccount} disabled={deleting}
           style={{
-            padding: '14px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)',
+            padding: '16px', borderRadius: 'var(--radius-lg)', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.3)',
             color: 'var(--accent-danger)', fontWeight: 600, fontSize: '15px', cursor: deleting ? 'not-allowed' : 'pointer', textAlign: 'center'
           }}
         >
