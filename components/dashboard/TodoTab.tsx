@@ -184,14 +184,14 @@ export default function TodoTab() {
     
     return (
       <div key={todo.id} className="todo-card" style={{
-        background: 'var(--bg-card)', 
+        background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         padding: '20px', 
         borderRadius: '16px', 
         border: '1px solid var(--border-subtle)', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'flex-start',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        boxShadow: 'var(--shadow-elevated)',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         marginBottom: '12px',
         position: 'relative',
@@ -275,8 +275,9 @@ export default function TodoTab() {
 
       {showForm && (
         <div style={{ 
-          background: 'var(--bg-card)', padding: '24px', borderRadius: 'var(--radius-xl)', 
-          boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)', 
+          background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          padding: '24px', borderRadius: 'var(--radius-xl)', 
+          boxShadow: 'var(--shadow-elevated)', border: '1px solid var(--border-subtle)', 
           marginBottom: '32px', animation: 'slideDown 0.3s ease-out forwards' 
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -325,7 +326,7 @@ export default function TodoTab() {
       )}
 
       {todos.length === 0 && !showForm ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-card)', borderRadius: '24px', border: '1px dashed var(--border-subtle)' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', borderRadius: '24px', border: '1px dashed var(--border-subtle)' }}>
           <div style={{ width: '64px', height: '64px', background: 'rgba(59,130,246,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto', color: 'var(--primary)' }}>
             <CalendarIcon />
           </div>
