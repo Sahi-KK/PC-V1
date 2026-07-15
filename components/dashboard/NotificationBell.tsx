@@ -36,6 +36,13 @@ export default function NotificationBell() {
       const vapidRes = await fetch('/api/notifications/vapid')
       const { publicKey } = await vapidRes.json()
 
+      // Check existing subscription
+      const existingSub = await reg.pushManager.getSubscription()
+      if (existingSub) {
+        // Unsubscribe the old one to force a refresh with the new VAPID key
+        await existingSub.unsubscribe()
+      }
+
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey)
