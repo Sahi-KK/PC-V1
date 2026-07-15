@@ -18,6 +18,8 @@ export default function ProfileTab() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
+  const [telegramLinked, setTelegramLinked] = useState(false)
+  const [linkingTelegram, setLinkingTelegram] = useState(false)
 
   useEffect(() => {
     async function fetchProfile() {
@@ -38,11 +40,30 @@ export default function ProfileTab() {
           }
         }
       }
+      
+      const res = await fetch('/api/telegram/link')
+      const tgData = await res.json()
+      if (tgData.isLinked) setTelegramLinked(true)
+
       setLoading(false)
     }
     fetchProfile()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function handleLinkTelegram() {
+    setLinkingTelegram(true)
+    try {
+      const res = await fetch('/api/telegram/link', { method: 'POST' })
+      const data = await res.json()
+      if (data.link) {
+        window.open(data.link, '_blank')
+      }
+    } catch (e) {
+      console.error(e)
+    }
+    setLinkingTelegram(false)
+  }
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -157,6 +178,40 @@ export default function ProfileTab() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div style={{
+        background: 'var(--bg-glass)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        padding: '24px', borderRadius: 'var(--radius-xl)',
+        boxShadow: 'var(--shadow-elevated)', marginBottom: '32px', border: '1px solid var(--border-subtle)'
+      }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Notification Settings</h2>
+        
+        <div style={{
+          padding: '16px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)',
+          background: 'rgba(255, 255, 255, 0.02)', display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ fontSize: '24px', background: 'var(--bg-body)', padding: '8px', borderRadius: 'var(--radius-sm)' }}>📱</div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Telegram Bot Notifications</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Get instant alerts for classes and tasks on Telegram.</div>
+            </div>
+          </div>
+          <button 
+            onClick={telegramLinked ? undefined : handleLinkTelegram}
+            disabled={linkingTelegram || telegramLinked}
+            style={{
+              padding: '10px 16px', borderRadius: '8px', border: 'none',
+              background: telegramLinked ? 'rgba(16, 185, 129, 0.1)' : 'var(--primary)',
+              color: telegramLinked ? '#10b981' : 'white',
+              fontWeight: 600, fontSize: '14px', cursor: telegramLinked ? 'default' : 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {telegramLinked ? '✓ Linked' : (linkingTelegram ? 'Generating...' : 'Link Telegram')}
+          </button>
         </div>
       </div>
 
