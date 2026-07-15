@@ -111,8 +111,76 @@ export async function GET(req: NextRequest) {
   // -----------------------------------------------------
   // B. SCAN CLASSES (calendar_entries)
   // -----------------------------------------------------
-  // To avoid complexity, we can do a similar scan for classes by joining students -> sections
-  // But for this phase, let's just make sure Todos work flawlessly and return
+  const { data: entries } = await supabase
+    .from('calendar_entries')
+    .select('*')
+    .eq('date', todayYYYYMMDD)
+    
+  if (entries && entries.length > 0) {
+    const upcomingEntries = entries.filter(e => {
+      if (!e.time_slot) return false
+      const startStr = e.time_slot.split('-')[0].trim()
+      const [h, m] = startStr.split(':').map(Number)
+      if (isNaN(h) || isNaN(m)) return false
+      const eventMins = h * 60 + m
+      return eventMins >= nowMins && eventMins <= nowMins + 35
+    })
+    
+    if (upcomingEntries.length > 0) {
+      const { data: users } = await supabase.from('user_profiles').select('id, roll_no, telegram_chat_id, push_subscriptions')
+      
+      if (users && users.length > 0) {
+        const rollNos = users.map(u => u.roll_no).filter(Boolean)
+        const { data: students } = await supabase.from('students').select('id, roll_no').in('roll_no', rollNos)
+        
+        if (students && students.length > 0) {
+          const studentIds = students.map(s => s.id)
+          const { data: enrollments } = await supabase.from('student_courses').select('student_id, course_abbr, section').in('student_id', studentIds)
+          
+          if (enrollments) {
+            for (const user of users) {
+              if (!user.telegram_chat_id && (!user.push_subscriptions || user.push_subscriptions.length === 0)) continue
+              
+              const student = students.find(s => s.roll_no === user.roll_no)
+              if (!student) continue
+              
+              const userEnrollments = enrollments.filter(e => e.student_id === student.id)
+              
+              for (const entry of upcomingEntries) {
+                const isEnrolled = userEnrollments.some(e => e.course_abbr === entry.course_abbr && e.section === entry.section)
+                
+                if (isEnrolled) {
+                  const actionUrl = `/dashboard/attendance#class-${entry.id}`
+                  const { data: existing } = await supabase
+                    .from('notifications')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('action_url', actionUrl)
+                    
+                  if (!existing || existing.length === 0) {
+                    const title = `Upcoming Class: ${entry.course_abbr}`
+                    const msg = `Starts at ${entry.time_slot.split('-')[0].trim()} in LR ${entry.lr || 'TBA'}`
+                    
+                    const payload = JSON.stringify({ title, body: msg, url: '/dashboard/attendance' })
+                    await sendWebPush(user.push_subscriptions, payload)
+                    await sendTelegramMessage(user.telegram_chat_id, `📚 <b>${title}</b>\n${msg}`)
+                    
+                    await supabase.from('notifications').insert({
+                      user_id: user.id,
+                      title,
+                      message: msg,
+                      action_url: actionUrl
+                    })
+                    processedCount++
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   
   return NextResponse.json({ ok: true, processed: processedCount })
 }
