@@ -452,11 +452,7 @@ export async function POST(req: NextRequest) {
     if (isPlacementQuery) {
       const placementSystemPrompt = `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately based ONLY on the documents provided. Cite specific rules or statistics. If the answer is not in the documents, say so clearly.`
 
-      // ── ATTEMPT 1: Gemini with full documents (1M token context) ──
-      if (GEMINI_API_KEY) {
-        try {
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-          const fullPrompt = `${placementSystemPrompt}
+      const fullDocsContent = `${placementSystemPrompt}
 
 ===== 2026-2027 PLACEMENT POLICY (FULL) =====
 ${PLACEMENT_POLICY}
@@ -465,16 +461,39 @@ ${PLACEMENT_POLICY}
 ${PLACEMENT_REPORT}
 
 User question: ${prompt}`
-          const result = await model.generateContent(fullPrompt)
+
+      // ── ATTEMPT 1: Gemini 2.0 Flash (1M token context, daily quota) ──
+      if (GEMINI_API_KEY) {
+        try {
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+          const result = await model.generateContent(fullDocsContent)
           return NextResponse.json({ reply: result.response.text() })
         } catch (geminiErr: any) {
-          // Quota exhausted or unavailable — fall through to extraction fallback
-          console.warn('[Gemini quota exhausted, using extraction fallback]', geminiErr.message?.substring(0, 100))
+          console.warn('[Placement] Gemini unavailable, trying Llama 4 Scout:', geminiErr.message?.substring(0, 80))
         }
       }
 
-      // ── FALLBACK: Server-side keyword extraction + Groq ──
-      // Extracts the most relevant paragraphs so we stay within Groq's free TPM limit.
+      // ── ATTEMPT 2: Llama 4 Scout on Groq (131K context window, separate quota) ──
+      try {
+        const scoutMessages = [
+          { role: 'user' as const, content: fullDocsContent }
+        ]
+        const scoutResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', messages: scoutMessages })
+        })
+        const scoutData = await scoutResponse.json()
+        if (scoutResponse.ok) {
+          return NextResponse.json({ reply: scoutData.choices[0].message.content })
+        }
+        console.warn('[Placement] Llama 4 Scout unavailable, using extraction:', scoutData.error?.message?.substring(0, 80))
+      } catch (scoutErr: any) {
+        console.warn('[Placement] Llama 4 Scout error:', scoutErr.message?.substring(0, 80))
+      }
+
+      // ── ATTEMPT 3 (last resort): Keyword extraction + Groq 70B ──
+      // Sends only the most relevant paragraphs to stay within free TPM limits.
       const queryWords = lower.split(/\s+/).filter((w: string) => w.length > 3)
 
       function extractSections(content: string, maxChars: number): string {
@@ -493,11 +512,9 @@ User question: ${prompt}`
           out += chunk + '\n\n'
           used += chunk.length
         }
-        // If no keyword match, return opening portion of document as context
         return out.trim() || content.substring(0, Math.floor(maxChars * 0.6))
       }
 
-      // Allocate up to ~3500 chars total (~875 tokens) — well within Groq 12K TPM
       const policySnippet = extractSections(PLACEMENT_POLICY, 2200)
       const reportSnippet = extractSections(PLACEMENT_REPORT, 1300)
 
@@ -505,7 +522,7 @@ User question: ${prompt}`
         { role: 'system', content: placementSystemPrompt },
         {
           role: 'user',
-          content: `PLACEMENT POLICY EXCERPTS (most relevant sections):\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS (most relevant sections):\n${reportSnippet}\n\nNote: These are excerpts. If you need broader context, advise the user to ask a more specific question.\n\nUser question: ${prompt}`
+          content: `PLACEMENT POLICY EXCERPTS (most relevant sections):\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS (most relevant sections):\n${reportSnippet}\n\nNote: These are the most relevant excerpts. For broader context, ask a more specific question.\n\nUser question: ${prompt}`
         }
       ]
 
