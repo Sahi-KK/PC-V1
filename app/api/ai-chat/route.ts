@@ -450,18 +450,41 @@ export async function POST(req: NextRequest) {
       (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt))
 
     if (isPlacementQuery) {
-      // ── Server-side section extraction (no external API quota needed) ──
+      const placementSystemPrompt = `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately based ONLY on the documents provided. Cite specific rules or statistics. If the answer is not in the documents, say so clearly.`
+
+      // ── ATTEMPT 1: Gemini with full documents (1M token context) ──
+      if (GEMINI_API_KEY) {
+        try {
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+          const fullPrompt = `${placementSystemPrompt}
+
+===== 2026-2027 PLACEMENT POLICY (FULL) =====
+${PLACEMENT_POLICY}
+
+===== 2024-2026 FINAL PLACEMENT REPORT (FULL) =====
+${PLACEMENT_REPORT}
+
+User question: ${prompt}`
+          const result = await model.generateContent(fullPrompt)
+          return NextResponse.json({ reply: result.response.text() })
+        } catch (geminiErr: any) {
+          // Quota exhausted or unavailable — fall through to extraction fallback
+          console.warn('[Gemini quota exhausted, using extraction fallback]', geminiErr.message?.substring(0, 100))
+        }
+      }
+
+      // ── FALLBACK: Server-side keyword extraction + Groq ──
+      // Extracts the most relevant paragraphs so we stay within Groq's free TPM limit.
       const queryWords = lower.split(/\s+/).filter((w: string) => w.length > 3)
 
-      function extractSections(docName: string, content: string, maxChars: number): string {
-        // Split on page breaks or double newlines
-        const chunks = content.split(/\r?\n{2,}|--+Page[^-]*--+/g).map(s => s.trim()).filter(s => s.length > 40)
-        // Score each chunk by how many query words it contains
-        const scored = chunks.map(chunk => {
+      function extractSections(content: string, maxChars: number): string {
+        const chunks = content.split(/\r?\n{2,}|--+Page[^-]*--+/g).map((s: string) => s.trim()).filter((s: string) => s.length > 40)
+        const scored = chunks.map((chunk: string) => {
           const cl = chunk.toLowerCase()
           const score = queryWords.reduce((n: number, w: string) => n + (cl.includes(w) ? 1 : 0), 0)
           return { chunk, score }
-        }).filter(x => x.score > 0).sort((a, b) => b.score - a.score)
+        }).filter((x: { chunk: string; score: number }) => x.score > 0)
+          .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
 
         let out = ''
         let used = 0
@@ -470,21 +493,19 @@ export async function POST(req: NextRequest) {
           out += chunk + '\n\n'
           used += chunk.length
         }
-        // Fallback: if nothing matched, return the first 1500 chars
-        return out.trim() || content.substring(0, 1500)
+        // If no keyword match, return opening portion of document as context
+        return out.trim() || content.substring(0, Math.floor(maxChars * 0.6))
       }
 
-      const policySnippet = extractSections('2026-27 Placement Policy', PLACEMENT_POLICY, 2000)
-      const reportSnippet = extractSections('2024-26 Final Placement Report', PLACEMENT_REPORT, 1500)
+      // Allocate up to ~3500 chars total (~875 tokens) — well within Groq 12K TPM
+      const policySnippet = extractSections(PLACEMENT_POLICY, 2200)
+      const reportSnippet = extractSections(PLACEMENT_REPORT, 1300)
 
       const placementMessages = [
-        {
-          role: 'system',
-          content: `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately based ONLY on the document excerpts provided. Cite the specific rule or statistic. If the answer is not in the excerpts, say so clearly.`
-        },
+        { role: 'system', content: placementSystemPrompt },
         {
           role: 'user',
-          content: `PLACEMENT POLICY EXCERPTS:\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS:\n${reportSnippet}\n\nUser question: ${prompt}`
+          content: `PLACEMENT POLICY EXCERPTS (most relevant sections):\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS (most relevant sections):\n${reportSnippet}\n\nNote: These are excerpts. If you need broader context, advise the user to ask a more specific question.\n\nUser question: ${prompt}`
         }
       ]
 
