@@ -49,7 +49,7 @@ Agreement ... 14
 
 Contents
 
- 3
+3
 to appear for the selection process of the company.
 b) Students who fail to submit their nominations before the deadline will not be allowed
 within the stipulated time
@@ -87,7 +87,7 @@ Committee, and Industry Relations and Interaction Cell are the three placement-r
 Placements is a student driven activity. Placement Committee, Placement Preparation
 1. Overview
 
- 4
+4
 at that point of time
 a) Attending PPT is compulsory for all students who are still part of the placement process
 2.2. Pre-Placement Talk (PPT)
@@ -130,7 +130,7 @@ strictly prohibited. Students must take every effort to maintain the decorum and
 purpose of placement, either individually or collectively and canvassing in any form is
 c) Students are not permitted to directly contact any organization for the implicit/explicit
 
- 5
+5
 by the Executive Committee Placement as per clause 3.2 of the policy.
 of potential relationship with organizations, the strict disciplinary action will be taken
 corporate/external world or leak of a sensitive information which again results in a loss
@@ -167,7 +167,7 @@ case, attendance will become compulsory.
 they would be notified by the Student Placement Committee regarding the same. In that
 b) Students who are already placed or have opted out will be asked to attend the PPT and
 
- 6
+6
 18 Not adhering to the strict formal dress code during placement-related activities Minor
 absence from the concerned authority
 17 organized by the Placement Committee and IRIC without prior written permission of Minor
@@ -222,7 +222,7 @@ The Placement Office shall initiate disciplinary action against the student who 
 3.1. Breaches of Discipline
 3. Discipline, Penalties & Grievance Redressal
 
- 7
+7
 3. Strikes will lead to CV freeze for a specific period of time
 2. Strikes will lead to detention
 1. Strike: In the event of fines being doubled twice or a Major breach
@@ -260,9 +260,9 @@ mentioned explicitly)
 Sharing Placement Preparation Committee -verified CVs with any party (unless
 summit
 19 placement -related activity, pre -placement talk, guest lectures, and management Minor
- Non-submission and/or forging any proofs such as in case of absenteeism from any
+Non-submission and/or forging any proofs such as in case of absenteeism from any
 
- 8
+8
 Placement office.
 resolution to any dispute based on unprofessional conduct will be decided by the
 ● Any misbehavior has to be reported to the placement office in writing within 3 days,
@@ -302,7 +302,7 @@ justification.
 conducted by and through IRIC).
 At the discretion of IRIC (sole authority over the implementation of the following penalties for the activities
 
- 9
+9
 will be treated as a major offence.
 e) Additionally, any action that tarnishes the reputation of the institute with the company
 program.
@@ -337,7 +337,7 @@ The 6-day summer placement process is usually scheduled in the 3rd/4th week of
 4.1. Summer placement week
 4. Placement week
 
- 10
+10
 least 2 lakhs more than PPO offered.
 companies of his/her choice provided the company is offering a CTC that is at
 PPO, s/he will be allowed to appear in the selection process of a maximum of 3
@@ -378,7 +378,7 @@ company has offered them a PPO or not. Concealment of this material information 
 a) The students have to compulsorily share with the placement office in writing if the
 6. Pre-Placement Offer (PPO) Policy
 
- 11
+11
 the placement office immediately and provide the details of the organization providing
 a) If a student does not wish to take assistance from the placement office, she/he must inform
 8. Opting out of the placement process
@@ -420,7 +420,7 @@ writing regarding any position secured; finalist status achieved or offer receiv
 a) Students must compulsorily inform the Placement Committee and Placement Office in
 7. Case Competition Policy
 
- 12
+12
 i. Revocation of privileges for lateral placements
 the Placecom will attract penalties that may include-
 d) Any student who reneges on an opportunity (summer/final placement offer) provided by
@@ -463,7 +463,7 @@ complete the internship on time. Post opt -out; institute will not facilitate on
 opts out from the summer placement process, it becomes his/her sole responsibility to
 him/her internship/job and send the joining letter to the Placement Office. Once a student
 
- 13
+13
 before implementation.
 requirements. In case of modifications, the updated policy will be shared with the students
 Committee Placement reserves the right to revise the policy based on emergent
@@ -507,7 +507,7 @@ iv.Revocation of Alumni Status and/or privileges
 iii.Can’t hold any position in Alumni council.
 ii.Notifying recruiters with respect to dishonoring offers at the time of verification.
 
- 14
+14
 Date:
 Roll No:
 Name:
