@@ -278,9 +278,6 @@ async function executeTool(name: string, args: any, today: string, callerUserId?
 
   // 10. QUERY PLACEMENT KNOWLEDGE
   if (name === 'query_placement_knowledge') {
-    const { document } = args;
-    if (document === 'policy') return PLACEMENT_POLICY;
-    if (document === 'report') return PLACEMENT_REPORT;
     return `[POLICY DOCUMENT]\n${PLACEMENT_POLICY}\n\n[REPORT DOCUMENT]\n${PLACEMENT_REPORT}`;
   }
 
@@ -419,10 +416,8 @@ const TOOLS = [
       parameters: {
         type: 'object',
         properties: {
-          document: { type: 'string', enum: ['policy', 'report', 'both'], description: 'Which document to fetch: "policy" for rules/eligibility, "report" for stats/packages/recruiters, or "both".' },
           query: { type: 'string', description: 'The exact question the user asked so you can retrieve relevant knowledge.' }
-        },
-        required: ['document']
+        }
       }
     }
   }
