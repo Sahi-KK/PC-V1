@@ -486,7 +486,7 @@ For placement questions, deeply analyze the requested situation based on the ret
     let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, tools: TOOLS, tool_choice: 'auto' })
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages, tools: TOOLS, tool_choice: 'auto' })
     })
 
     let data = await response.json()
@@ -509,7 +509,7 @@ For placement questions, deeply analyze the requested situation based on the ret
       response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages })
+        body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages })
       })
       data = await response.json()
       if (!response.ok) throw new Error(data.error?.message || 'Groq API error')
