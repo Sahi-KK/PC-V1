@@ -433,8 +433,9 @@ export async function POST(req: NextRequest) {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PATH A: Placement questions → Gemini SDK directly (1M token context,
-    //         no tool-calling overhead, no TPM rate-limit issues)
+    // PATH A: Placement questions → keyword-extracted RAG via Groq
+    //         Extract only the relevant sections from documents (~1500 chars),
+    //         so we stay well within Groq's free-tier TPM limits.
     // ─────────────────────────────────────────────────────────────────────────
     const PLACEMENT_KEYWORDS = [
       'placement policy', 'placement report', 'placement rule', 'placement stat',
@@ -449,24 +450,52 @@ export async function POST(req: NextRequest) {
       (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt))
 
     if (isPlacementQuery) {
-      if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-      const placementPrompt = `You are the AI Assistant for PC-V1 Academic Portal at IIM Rohtak. The user has a question about IIM Rohtak's placement process.
+      // ── Server-side section extraction (no external API quota needed) ──
+      const queryWords = lower.split(/\s+/).filter((w: string) => w.length > 3)
 
-Here are the two official documents to reference:
+      function extractSections(docName: string, content: string, maxChars: number): string {
+        // Split on page breaks or double newlines
+        const chunks = content.split(/\r?\n{2,}|--+Page[^-]*--+/g).map(s => s.trim()).filter(s => s.length > 40)
+        // Score each chunk by how many query words it contains
+        const scored = chunks.map(chunk => {
+          const cl = chunk.toLowerCase()
+          const score = queryWords.reduce((n: number, w: string) => n + (cl.includes(w) ? 1 : 0), 0)
+          return { chunk, score }
+        }).filter(x => x.score > 0).sort((a, b) => b.score - a.score)
 
-===== 2026-2027 PLACEMENT POLICY =====
-${PLACEMENT_POLICY}
+        let out = ''
+        let used = 0
+        for (const { chunk } of scored) {
+          if (used + chunk.length > maxChars) break
+          out += chunk + '\n\n'
+          used += chunk.length
+        }
+        // Fallback: if nothing matched, return the first 1500 chars
+        return out.trim() || content.substring(0, 1500)
+      }
 
-===== 2024-2026 FINAL PLACEMENT REPORT =====
-${PLACEMENT_REPORT}
+      const policySnippet = extractSections('2026-27 Placement Policy', PLACEMENT_POLICY, 2000)
+      const reportSnippet = extractSections('2024-26 Final Placement Report', PLACEMENT_REPORT, 1500)
 
-Based ONLY on the above documents, answer the user's question accurately and in detail. If the answer is in the Policy, cite the specific rule. If it is in the Report, cite the specific statistic. If neither document contains the answer, say so clearly.
+      const placementMessages = [
+        {
+          role: 'system',
+          content: `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately based ONLY on the document excerpts provided. Cite the specific rule or statistic. If the answer is not in the excerpts, say so clearly.`
+        },
+        {
+          role: 'user',
+          content: `PLACEMENT POLICY EXCERPTS:\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS:\n${reportSnippet}\n\nUser question: ${prompt}`
+        }
+      ]
 
-User question: ${prompt}`
-
-      const result = await model.generateContent(placementPrompt)
-      return NextResponse.json({ reply: result.response.text() })
+      const placementResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: placementMessages })
+      })
+      const placementData = await placementResponse.json()
+      if (!placementResponse.ok) throw new Error(placementData.error?.message || 'AI service error')
+      return NextResponse.json({ reply: placementData.choices[0].message.content })
     }
 
     // ─────────────────────────────────────────────────────────────────────────
