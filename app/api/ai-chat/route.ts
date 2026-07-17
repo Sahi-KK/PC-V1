@@ -276,14 +276,12 @@ async function executeTool(name: string, args: any, today: string, callerUserId?
     return materials && materials.length > 0 ? JSON.stringify(materials) : `No materials found for "${query}".`
   }
 
-  // 10. READ PLACEMENT POLICY
-  if (name === 'read_placement_policy') {
-    return PLACEMENT_POLICY;
-  }
-
-  // 11. READ PLACEMENT REPORT
-  if (name === 'read_placement_report') {
-    return PLACEMENT_REPORT;
+  // 10. QUERY PLACEMENT KNOWLEDGE
+  if (name === 'query_placement_knowledge') {
+    const { document } = args;
+    if (document === 'policy') return PLACEMENT_POLICY;
+    if (document === 'report') return PLACEMENT_REPORT;
+    return `[POLICY DOCUMENT]\n${PLACEMENT_POLICY}\n\n[REPORT DOCUMENT]\n${PLACEMENT_REPORT}`;
   }
 
   return `Unknown tool: ${name}`
@@ -416,26 +414,15 @@ const TOOLS = [
   {
     type: 'function',
     function: {
-      name: 'read_placement_policy',
-      description: 'Read the official 2026-2027 Placement Policy document. Use this whenever the user asks about placement rules, eligibility, shortlisting, PPOs, rejecting offers, or any policy situations.',
+      name: 'query_placement_knowledge',
+      description: 'Fetch the 2026-2027 Placement Policy or 2024-2026 Final Placement Report. Use this whenever the user asks about placement rules, eligibility, shortlisting, highest packages, top recruiters, rejecting offers, or any policy situations.',
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Optional search query.' }
-        }
-      }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'read_placement_report',
-      description: 'Read the official 2024-2026 Final Placement Report. Use this whenever the user asks about placement statistics, highest packages, average salary, top recruiters, or sector-wise placements.',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: { type: 'string', description: 'Optional search query.' }
-        }
+          document: { type: 'string', enum: ['policy', 'report', 'both'], description: 'Which document to fetch: "policy" for rules/eligibility, "report" for stats/packages/recruiters, or "both".' },
+          query: { type: 'string', description: 'The exact question the user asked so you can retrieve relevant knowledge.' }
+        },
+        required: ['document']
       }
     }
   }
@@ -487,10 +474,11 @@ TOOL USAGE RULES:
 - "all courses / list all subjects" → get_all_courses
 - "find student [name]" → search_student
 - "SPOC for [name]" → search_spoc_directory
-- Questions explicitly about "Placement Policy", "placement rules", "eligibility", "PPO", "offers", or rejecting offers → read_placement_policy
-- Questions explicitly about "Placement Report", "placement stats", "highest package", "average salary", or "recruiters" → read_placement_report
+- Questions explicitly about "Placement Policy", "placement rules", "eligibility", "PPO", "offers", or rejecting offers → query_placement_knowledge
+- Questions explicitly about "Placement Report", "placement stats", "highest package", "average salary", or "recruiters" → query_placement_knowledge
 
-CRITICAL: Do NOT use search_spoc_directory for "Placement Policy". "Placement Policy" is NOT a person! Use the read_placement_policy tool instead.
+CRITICAL: Do NOT output raw XML `<function>` tags! You MUST use the standard native JSON tool-calling interface! 
+CRITICAL: Do NOT use search_spoc_directory for "Placement Policy". "Placement Policy" is NOT a person! Use the query_placement_knowledge tool instead.
 When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.
 For placement questions, deeply analyze the requested situation based on the retrieved policy or report and give a direct, 100% accurate, and reasoned answer.`
 
