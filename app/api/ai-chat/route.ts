@@ -477,7 +477,7 @@ TOOL USAGE RULES:
 - Questions explicitly about "Placement Policy", "placement rules", "eligibility", "PPO", "offers", or rejecting offers → query_placement_knowledge
 - Questions explicitly about "Placement Report", "placement stats", "highest package", "average salary", or "recruiters" → query_placement_knowledge
 
-CRITICAL: Do NOT output raw XML `<function>` tags! You MUST use the standard native JSON tool-calling interface! 
+CRITICAL: Do NOT output raw XML <function> tags! You MUST use the standard native JSON tool-calling interface!
 CRITICAL: Do NOT use search_spoc_directory for "Placement Policy". "Placement Policy" is NOT a person! Use the query_placement_knowledge tool instead.
 When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.
 For placement questions, deeply analyze the requested situation based on the retrieved policy or report and give a direct, 100% accurate, and reasoned answer.`
