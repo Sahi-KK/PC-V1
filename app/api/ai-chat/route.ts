@@ -4,6 +4,7 @@ import { createClient as supabaseCreateClient } from '@supabase/supabase-js'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import fs from 'fs'
 import path from 'path'
+import { PLACEMENT_POLICY, PLACEMENT_REPORT } from '@/lib/placementData'
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
@@ -274,6 +275,16 @@ async function executeTool(name: string, args: any, today: string, callerUserId?
     return materials && materials.length > 0 ? JSON.stringify(materials) : `No materials found for "${query}".`
   }
 
+  // 10. READ PLACEMENT POLICY
+  if (name === 'read_placement_policy') {
+    return PLACEMENT_POLICY;
+  }
+
+  // 11. READ PLACEMENT REPORT
+  if (name === 'read_placement_report') {
+    return PLACEMENT_REPORT;
+  }
+
   return `Unknown tool: ${name}`
 }
 
@@ -400,6 +411,22 @@ const TOOLS = [
         required: ['query']
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'read_placement_policy',
+      description: 'Read the official 2026-2027 Placement Policy document. Use this whenever the user asks about placement rules, eligibility, shortlisting, PPOs, rejecting offers, or any policy situations.',
+      parameters: { type: 'object', properties: {} }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'read_placement_report',
+      description: 'Read the official 2024-2026 Final Placement Report. Use this whenever the user asks about placement statistics, highest packages, average salary, top recruiters, or sector-wise placements.',
+      parameters: { type: 'object', properties: {} }
+    }
   }
 ]
 
@@ -449,8 +476,11 @@ TOOL USAGE RULES:
 - "all courses / list all subjects" → get_all_courses
 - "find student [name]" → search_student
 - "SPOC for [name]" → search_spoc_directory
+- "placement rules / what happens if I reject / eligibility" → read_placement_policy
+- "placement stats / highest package / recruiters" → read_placement_report
 
-When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.`
+When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.
+For placement questions, deeply analyze the requested situation based on the retrieved policy or report and give a direct, 100% accurate, and reasoned answer.`
 
     const messages: any[] = [
       { role: 'system', content: systemPrompt },
