@@ -472,14 +472,13 @@ User question: ${prompt}`
         }
       }
 
-      // ── FALLBACK: Groq Llama 4 Scout with FULL documents ──
-      // Llama 4 Scout has 30,000 TPM on free tier (vs 12K for 70b-versatile).
-      // Both cleaned docs = ~13K tokens — fits well within 30K limit.
+      // ── FALLBACK: Groq Llama 3.3 70B with FULL documents ──
+      // Both deep-pruned docs = ~8.9K tokens — fits well within Groq 12K limit.
       const fullDocsResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             { role: 'system', content: placementSystemPrompt },
             { role: 'user', content: fullDocsUserMessage }

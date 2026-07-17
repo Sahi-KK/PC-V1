@@ -1,43 +1,4 @@
-export const PLACEMENT_POLICY = `Placement Policy 2026-27
-
-Rohtak
-Indian Institute of Management
-
-Agreement ... 14
-
-10. Other Information ... 13
-
-9. Post Placement Conduct ... 12
-
-8. Opting out of the placement process ... 11
-
-7. Case Competition Policy ... 11
-
-6. Pre-Placement Offer (PPO) Policy ... 10
-
-5. Conduct during internship ... 9
-
-4.2. Final placement week... 9
-
-4.1. Summer placement week ... 9
-
-4. Placement week ... 9
-
-3.3. Process of Grievance Redressal ... 8
-
-3.2. Penalties ... 7
-
-3.1. Breaches of Discipline ... 6
-
-3. Discipline, Penalties & Grievance Redressal ... 6
-
-2.4. Other Placement Related Activities ... 5
-
-2.3. Interview Process ... 5
-
-2.2. Pre-Placement Talk (PPT) ... 4
-
-2.1. General ... 3
+export const PLACEMENT_POLICY = `2.1. General ... 3
 
 2. Guidelines ... 3
 
@@ -519,218 +480,9 @@ above. I also understand that these terms have been decided keeping in mind the 
 I have read the document carefully and I agree with all the terms and conditions mentioned
 Agreement`
 
-export const PLACEMENT_REPORT = `R e p o rt
-P la c e m e n t
-F in a l
-Indian Institute of Management Rohtak
-2 0 2 4 - 2 6
-
-opportunity becomes impact
-Where ambition meets ability,
-
-Final Placement Report 2024-26
-Placement Team
-14
-Case Competitions
-13
-Prominent Recruiters
-12
-Domain Highlights
-09
-Key Takeaways
-08
-Batch Profile
-07
-16 Years of Excellence
-06
-Message from Chairpersons
-05
-Director’s Message
-04
-Foreword
-03
-2
-C ontents
-
-Final Placement Report 2024-26
-in v it e y o u t o w it n e s s t h e r e m a r k a b le jo u r n e y s t h a t d e fin e t h e fu t u r e o f IIM R o h t a k .
-d e t e r m in a t io n , a n d s u c c e s s . A s w e c o n t in u e t o p u s h b o u n d a r ie s a n d r e d e fin e e x c e lle n c e , w e
-T h is r e p o r t e n c a p s u la t e s m o r e t h a n ju s t s t a t is t ic s , it t e lls t h e s t o r ie s o f a s p ir a t io n s ,
-c o r p o r a t e w o r ld b u t a ls o d r iv e m e a n in g fu l im p a c t .
-in s t r u m e n t a l in s t r e n g t h e n in g o u r m is s io n t o s h a p e p r o fe s s io n a ls w h o n o t o n ly t h r iv e in t h e
-le a d e r s . T h e u n w a v e r in g c o m m it m e n t o f o u r fa c u lt y , a lu m n i, a n d p la c e m e n t t e a m h a s b e e n
-c o lle c t iv e s p ir it o f a n in s t it u t io n t h a t n u r t u r e s t a le n t , fo s t e r s a m b it io n , a n d d e v e lo p s fu t u r e
-A t IIM R o h t a k , p la c e m e n t s a r e m o r e t h a n ju s t a n a n n u a l m ile s t o n e ; t h e y e m b o d y t h e
-t o s h a p e p r o fe s s io n a ls e q u ip p e d fo r r e a l-w o r ld c h a lle n g e s .
-a n d p r e -p la c e m e n t o ffe r s is a t e s t a m e n t t o t h e in d u s t r y ’s c o n fid e n c e in IIM R o h t a k ’s a b ilit y
-t h e ir c o n t in u e d c o n fid e n c e in o u r t a le n t p o o l. T h e g r o w in g n u m b e r o f m a r q u e e r e c r u it e r s
-W e e x t e n d o u r d e e p e s t g r a t it u d e t o o u r r e c r u it in g p a r t n e r s , b o t h lo n g -s t a n d in g a n d n e w , fo r
-w h o c o n t in u e t o r e c o g n is e a n d r e w a r d t h e e x c e p t io n a l t a le n t n u r t u r e d w it h in o u r c a m p u s .
-T h e s e a c c o m p lis h m e n t s a r e a r e fle c t io n o f t h e u n w a v e r in g t r u s t o f o u r v a lu e d r e c r u it e r s ,
-n e w b e n c h m a r k s in o p p o r t u n it ie s , in d u s t r y c o lla b o r a t io n s , a n d g lo b a l r e c o g n it io n .
-p la c e m e n t s e a s o n h a s n o t o n ly r e in fo r c e d o u r le g a c y o f 10 0 % p la c e m e n t s b u t h a s a ls o s e t
-t o t h is p h ilo s o p h y , m a r k in g y e t a n o t h e r y e a r o f o u t s t a n d in g a c h ie v e m e n t s . T h is y e a r ’s
-t h e in d u s t r y . T h e F in a l P la c e m e n t R e p o r t fo r t h e P G P 2 0 2 4 -2 6 c o h o r t s t a n d s a s a t e s t a m e n t
-is n o t ju s t m e a s u r e d b y p la c e m e n t s b u t b y t h e v a lu e w e c r e a t e fo r b o t h o u r s t u d e n t s a n d
-T h e s t o r y o f IIM R o h t a k is o n e o f c o n t in u o u s g r o w t h , r e s ilie n c e , a n d e x c e lle n c e . H e r e , s u c c e s s
-3
-Forew ord
-
-Final Placement Report 2024-26
-b e st w ish e s fo r th e ir fu tu re su cce ss.
-I co n g ratu late th e M B A B atch o f 20 24 –26 o n th is re m ark ab le ach ie ve m e n t an d e xte n d m y
-in n o vative , an d g lo b ally co m p e te n t le ad e rs.
-th e ir o rg an izatio n s an d so cie ty. IIM R o h tak re m ain s co m m itte d to n u rtu rin g re sp o n sib le ,
-co n fid e n t th e y w ill u p h o ld th e In stitu te ’s valu e s an d m ak e m e an in g fu l co n trib u tio n s to
-p lace m e n t p ro ce ss. A s o u r g rad u atin g stu d e n ts b e g in th e ir p ro fe ssio n al jo u rn e ys, I am
-d e d icate d e ffo rts o f th e P lace m e n t C o m m itte e in e n su rin g th e su cce ssfu l co n d u ct o f th e
-m an ag e m e n t e d u catio n an d tale n t d e ve lo p m e n t at IIM R o h tak . I also ack n o w le d g e th e
-p artn e rs fo r th e ir co n tin u e d su p p o rt an d tru st, w h ich in sp ire s u s to fu rth e r stre n g th e n
-facu lty, alu m n i, re cru ite rs, an d staff. I e xte n d m y sin ce re ap p re ciatio n to o u r re cru itin g
-co n fid e n ce in th e ir p o te n tial. Th e se ach ie ve m e n ts re fle ct th e co lle ctive e ffo rts o f stu d e n ts,
-e xte n d e d to stu d e n ts, re fle ctin g th e ir stro n g in te rn sh ip p e rfo rm an ce an d e m p lo ye rs’
-m e d ian co m p e n satio n w as re co rd e d at ₹18 .0 0 LP A . O ve r 4 0 P re -P lace m e n t O ffe rs w e re
-₹20 .0 3LP A , re g iste rin g a g ro w th o f ~7% o ve r th e p re vio u s ye ar’s ave rag e p ack ag e . Th e
-p lace m e n t se aso n sto o d at ₹37.10 LP A , w h ile th e ave rag e co m p e n satio n re ach e d
-an d p e rse ve ran ce o f th e stu d e n ts. Th e h ig h e st d o m e stic co m p e n satio n o ffe re d d u rin g th e
-Th e p lace m e n t o u tco m e s ach ie ve d b y th e M B A B atch o f 20 24 –26 re fle ct th e d e d icatio n
-K irlo sk ar O il E n g in e s, S B I C ap ital M ark e ts, N atW e st, an d W e lls F arg o , am o n g o th e rs.
-C ap g e m in i, C o g n izan t, E rn st & Y o u n g , H S B C , IC IC I B an k , ID B I B an k , In d u s V alle y P artn e rs,
-in th e p lace m e n t p ro ce ss in clu d e d A d itya B irla C ap ital, A m azo n , A m u l, B arclays, A B In B e v,
-S tan le y, S u zlo n , an d m an y o th e r re p u te d o rg an izatio n s. P ro m in e n t re cru ite rs p articip atin g
-se ve ral n e w re cru ite rs, in clu d in g B lack R o ck , H ale o n , JS W E n e rg y, K o tak S e cu ritie s, M o rg an
-Th is ye ar, th e In stitu te fu rth e r e xp an d e d its co rp o rate o u tre ach th ro u g h asso ciatio n s w ith
-e xce l in to d ay’s d yn am ic b u sin e ss e n viro n m e n t.
-in d u stry-o rie n te d p e d ag o g y, th e y d e ve lo p th e m an ag e rial sk ills an d in sig h ts n e e d e d to
-e m e rg in g in d u stry tre n d s. S u p p o rte d b y acco m p lish e d facu lty, a rig o ro u s cu rricu lu m , an d
-p ro g ram m e s, stu d e n ts g ain p ractical e xp o su re to co n te m p o rary b u sin e ss p ractice s an d
-p ro je cts, m an ag e m e n t co n clave s, in d u strial visits, w o rk sh o p s, an d ce rtificatio n
-p ro fe ssio n al co m p e te n ce , an d le ad e rsh ip d e ve lo p m e n t. Th ro u g h in d u stry in te ractio n s, live
-O ve r th e ye ars, IIM R o h tak h as fo ste re d an e co syste m th at p ro m o te s acad e m ic e xce lle n ce ,
-re so u rce s, p ro d u ct m an ag e m e n t, an d g e n e ral m an ag e m e n t.
-b ro ad sp e ctru m o f ro le s in co n su ltin g , fin an ce , m ark e tin g , o p e ratio n s, an alytics, h u m an
-vib ran t an d co m p e titive p lace m e n t p ro ce ss. S tu d e n ts se cu re d o p p o rtu n itie s acro ss a
-re cru itin g p artn e rs, co u p le d w ith th e ad d itio n o f se ve ral n e w o rg an izatio n s, re su lte d in a
-valu e s, an d in d u stry re ad in e ss o f o u r g rad u ate s. Th e co n tin u e d su p p o rt o f o u r valu e d
-p lace m e n ts, re affirm in g th e stro n g co n fid e n ce th at re cru ite rs p lace in th e cap ab ilitie s,
-e lig ib le stu d e n ts h ave b e e n su cce ssfu lly p lace d , re su ltin g in 10 0 %
-In stitu te o f M an ag e m e n t R o h tak . I h ave b e e n in fo rm e d th at all
-P lace m e n t p ro ce ss fo r th e M B A B atch o f 20 24 –26 at th e In d ian
-I am p le ase d to an n o u n ce th e su cce ssfu l co m p le tio n o f th e F in al
-D ire c to r
-Prof. Dheeraj Sharma
-4
-D ire c to r’s M e s s a g e
-
-Final Placement Report 2024-26
-w is h e s t o o u r 15 t h P G P b a t c h fo r t h e ir p r o fe s s io n a l jo u r n e y s a n d c a r e e r g r o w t h .
-in s t r u m e n t a l in s h a p in g t h e o v e r a ll p la c e m e n t o u t c o m e . L a s t ly , I c o n v e y m y b e s t
-c o m p le m e n t e d b y t h e in s ig h t s o f t h e D e a n s a n d fa c u lt y m e m b e r s , h a v e b e e n
-e x e m p la r y le a d e r s h ip , s u p p o r t , a n d g u id a n c e o f t h e c o m p e t e n t a u t h o r it y ,
-R e la t io n s a n d In t e r a c t io n C e ll (IR IC ), a n d P la c e m e n t P r e p a r a t io n C o m m it t e e . T h e
-c o m m it m e n t , c o n s is t e n t e ffo r t s , a n d d e d ic a t io n o f t h e P la c e m e n t C o m m it t e e , In d u s t r y
-le g a c y a n d n e w r e c r u it e r s . T h e r e m a r k a b le p la c e m e n t o u t c o m e d e m o n s t r a t e s t h e
-in s t it u t e lo o k s fo r w a r d t o n u r t u r in g a n d d e e p e n in g it s r e la t io n s h ip s w it h b o t h t h e
-m y d e e p g r a t it u d e t o a ll t h e r e c r u it e r s fo r t h e ir c o n t in u e d t r u s t a n d c o n fid e n c e , a n d t h e
-e n g a g e m e n t o f 13 0 + n e w r e c r u it e r s in t h e fin a l p la c e m e n t p r o c e s s e s . I w a n t t o e x p r e s s
-t h e p la c e m e n t t e a m h a s s t r e n g t h e n e d it s o u t r e a c h , a s e v id e n c e d b y t h e a c t iv e
-c r e d ib ilit y a n d v a lu e t o it s le g a c y r e c r u it e r s . It is a ls o a m o m e n t o f im m e n s e p r id e t h a t
-in d u s t r y r e a d in e s s , r e fle c t in g t h e c o n t in u e d a b ilit y o f t h e in s t it u t e t o d e liv e r e n d u r in g
-W it h a r e m a r k a b le P P O s (4 0 + ) s e c u r e d , o u r s t u d e n t s h a v e d e m o n s t r a t e d a h ig h le v e l o f
-IN R 18 L P A , r e s p e c t iv e ly , r e fle c t in g a s t e a d y y e a r -o n -y e a r a v e r a g e C T C in c r e a s e o f 6 .9 % .
-r e a c h e d IN R 3 7 .10 L P A , w h ile t h e a v e r a g e a n d m e d ia n C T C s s t o o d a t IN R 2 0 .0 3 L P A a n d
-t r u s t w o r t h y a n d r e s p o n s ib le m a n a g e m e n t in s t it u t io n . T h e h ig h e s t C T C o f t h is y e a r
-h a s r e in fo r c e d IIM R o h t a k ’s g r o w in g c r e d ib ilit y a s a r e lia b le ,
-in v o lv e d s t a k e h o ld e r s . T h e a c t iv e p a r t ic ip a t io n o f 2 10 + r e c r u it e r s
-w it h t h e e x c e p t io n a l e n t h u s ia s m a n d p r o a c t iv it y o f a ll t h e
-p la c e m e n t fo r t h e a c a d e m ic y e a r 2 0 2 5 -2 6 h a s b e e n c o n c lu d e d
-W it h im m e n s e p le a s u r e , I a m h a p p y t o in fo r m y o u t h a t t h e fin a l
-P la c e m e n t C h a ir
-Dr. Rubina Chakma
-5
-Message from Chairperson
-
-Final Placement Report 2024-26
-development, professional growth, and future leadership.
-Impact: Facilitating an environment conducive to academic
-learners across 17 diverse courses.
-The Ecosystem: A thriving community of over 1,600
-2026
-internationally renowned institution.
-demonstrating a rapid rise to prominence as an
-Instant Impact: Achieved this in the very first attempt,
-Post Graduate Management Programme category.
-Global Debut: Secured a 151+ QS World ranking in the
-2024
-distinction.
-among the top 2% of business schools globally to hold this
-Global Benchmark: This recognition places IIM Rohtak
-Elite Status: Secured the prestigious AMBA Accreditation.
-2022
-Industry-Academia Interface and Research & Innovation.
-Industry Recognition: Received awards for excellence in
-Research and Professional Practices.
-Top-Tier Research: Ranked 5th among all IIMs in
-2020
-postgraduate studies into a single comprehensive stream.
-immediately after Class XII, combining undergraduate and
-The Model: A unique five-year integrated course starting
-in Management (BBA + MBA).
-Pioneering Growth: Introduced the Integrated Programme
-2018
-pursuits.
-education and actively promote research and scholarly
-Mission: Mandated to provide world-class management
-the 8th IIM in the country.
-Establishment: Set up by the Government of India as
-2009
-6
-16 Y e a rs o f E x c e lle n c e
-
-Final Placement Report 2024-26
-Finance Others 18.8 Months
-9% 9% 25-36 months36+ months
-Experience
-26% 5%
-Average Work
-Operations Consulting
-11% 11%
-1-11 months 12-24 months
-26% 43%Marketing IT/Analytics
-32% 28%
-Industry Background Work Experience
-Program Talk Series Pedagogy Exposure
-Rural Engagement Leadership Case Based Practical
-Course Curriculum
-Operations GM & HR
-Arts & Others Engineering
-11% 17%
-10% 5%
-g
-M S 54%
-6%
-&
-n
-s
-a tr ti c
-r a l i
-k t u t
-e e s ly
-t g n a
-i y
-n
-25% o n 15% 57%g C
-A
-
-& T
-I
-Finance Science Commerce
-Focus Area Academic Diversity
-Total Students Gender Ratio Dual Degree
-3 0 3 3 :7 9 1
-Batch of 2024-26
+export const PLACEMENT_REPORT = `Batch of 2024-26
 7
-B a tc h P ro file
+Batch Profile
 
 Final Placement Report 2024-26
 reinforce IIM Rohtak’s positioning as a reliable source of high-impact management talent.
@@ -762,7 +514,7 @@ roles across diverse industries with
 strong placement performance, securing 33.01 LPA
 The PGP batch of 2024–26 delivered a TOP 10%
 8
-K e y T a k e a w a y s
+Key Takeaways
 
 Final Placement Report 2024-26
 functions, reflecting sustained demand for finance professionals.
@@ -770,14 +522,15 @@ quantitative skills, offering opportunities in risk, banking, and investment-rel
 finance, and financial analytics. Recruiters sought candidates with strong analytical and
 The Finance domain recorded robust participation, with roles spanning BFSI, corporate
 INR 28.12 LPA INR 21.36 LPA
-H ig h e s t C T C A v e ra g e C T C
+Highest CTC Average CTC
 Finance 23%
 consulting firms reaffirmed IIM Rohtak’s growing presence in the consulting ecosystem.
 transformation initiatives. Healthy compensation trends and participation from leading
 solving roles. Recruiters offered profiles spanning business consulting, analytics, and
 Consulting attracted strong interest from students inclined toward strategy and problem-
 INR 33.00 LPA INR 21.35 LPA
-H ig h e s t C T C A v e ra g e C T C
+
+Highest CTC Average CTC
 Consulting 28%
 9
 Domain Highlights
@@ -789,14 +542,14 @@ profiles centered on process optimization, data-driven insights, and cross-funct
 enabled roles across analytics, operations, and digital transformation. Recruiters offered
 This domain witnessed steady participation, highlighting growing interest in technology-
 INR 33.12 LPA INR 18.88 LPA
-H ig h e s t C T C A v e ra g e C T C
+Highest CTC Average CTC
 PM, IT & Operations 13%
 compensation and consistent participation reflected sustained industry confidence.
 customer engagement across FMCG, consumer, and B2B sectors. Competitive
 interest and recruiter demand. Roles focused on brand strategy, market expansion, and
 Sales & Marketing remained one of the most preferred domains, driven by strong student
 INR 25.00 LPA INR 18.82 LPA
-H ig h e s t C T C A v e ra g e C T C
+Highest CTC Average CTC
 Sales & Marketing 20%
 10
 Domain Highlights
@@ -807,7 +560,7 @@ management, and strategic execution. The domain continued to attract students se
 functional exposure. Recruiters offered profiles involving business operations, people
 General Management and HR roles emphasized leadership development and cross-
 INR 37.10 LPA INR 18.27 LPA
-H ig h e s t C T C A v e ra g e C T C
+Highest CTC Average CTC
 General Management & HR 16%
 11
 Domain Highlights
@@ -841,25 +594,25 @@ Case Launches Batch Participation
 Case Competitions
 
 Final Placement Report 2024-26
-+ 9 1 9 2 6 5 8 2 0 15 6
-V atsal G upta
-+ 9 1 7 0 8 2 0 0 16 11
-P la c e m e n t O ffic e r
-P ushkar K ashyap
-+ 9 1 9 13 15 5 19 8 1 + 9 1 9 3 0 6 5 3 5 6 2 2 + 9 1 9 6 6 8 4 6 7 9 9 9
-Shruti K ela Sw eta V P rannoy H ans
-+ 9 1 7 0 6 0 9 0 6 0 7 6 + 9 1 7 9 7 4 2 16 17 5 + 9 1 8 0 7 7 4 4 7 4 3 4
-M onal K ala N irbhay K ushw aha R udransh R astogi
-+ 9 1 9 2 0 5 2 110 10 + 9 1 7 4 8 9 4 6 0 5 8 9 + 9 1 6 3 5 4 4 4 8 4 9 8
-B azil M ehdi K rishnakant Singh M anal R aval
-+ 9 1 8 4 6 0 4 118 2 6 + 9 1 8 8 2 8 6 3 16 3 3 + 9 1 9 8 7 17 3 0 2 2 7
-A garw al Jaivardhan A rjun R aina A ryan A ggarw al
++919265820156
+Vatsal Gupta
++917082001611
+Placement Officer
+Pushkar Kashyap
++91913151981 +919306535622 +91966847999
+Shruti Kela Sweta VP Prannoy Hans
++917060906076 +917974216175 +918077447434
+Mona Kala Nirbhay Kushwaha Rudransh Rastogi
++9192052110 +917489460589 +916354448498
+Bazil Mehdi Krishnakant Singh Manal Raval
++918460411826 +918828631633 +919871732022
+Agarwal Jaivardhan Arjun Raina Aryan Aggarwal
 14
-P la c e m e n t T e a m
+Placement Team
 
-W e b s ite : w w w .iim ro h ta k .a c .in
-E m a il: p la c e m e n ts@ iim ro h ta k .a c .in
-T e l: + 9 1 7 0 8 2 0 0 16 11
-S u n a ria , R o h ta k -12 4 0 10 , H a ry a n a , In d ia
-M a n a g e m e n t C ity , N H -10 , S o u th e rn B y p a ss,
-In d ia n In s titu te o f M a n a g e m e n t R o h ta k`
+Website: www.iimrohtak.ac.in
+Email: placements@iimrohtak.ac.in
+Tel: +917082001611
+Sunaria, Rohtak-124010, Haryana, India
+Management City, NH-10, Southern Bypass,
+Indian Institute of Management Rohtak`
