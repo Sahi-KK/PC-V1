@@ -483,10 +483,10 @@ For placement questions, deeply analyze the requested situation based on the ret
     ]
 
     // ── First LLM call ──
-    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    let response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages, tools: TOOLS, tool_choice: 'auto' })
+      headers: { 'Authorization': `Bearer ${GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gemini-1.5-flash', messages, tools: TOOLS, tool_choice: 'auto' })
     })
 
     let data = await response.json()
@@ -506,13 +506,13 @@ For placement questions, deeply analyze the requested situation based on the ret
         messages.push({ role: 'tool', tool_call_id: toolCall.id, content: result })
       }
 
-      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages })
+        headers: { 'Authorization': `Bearer ${GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gemini-1.5-flash', messages })
       })
       data = await response.json()
-      if (!response.ok) throw new Error(data.error?.message || 'Groq API error')
+      if (!response.ok) throw new Error(data.error?.message || 'Gemini API error')
       message = data.choices[0].message
     }
 
