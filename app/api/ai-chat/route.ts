@@ -418,7 +418,12 @@ const TOOLS = [
     function: {
       name: 'read_placement_policy',
       description: 'Read the official 2026-2027 Placement Policy document. Use this whenever the user asks about placement rules, eligibility, shortlisting, PPOs, rejecting offers, or any policy situations.',
-      parameters: { type: 'object', properties: {} }
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Optional search query.' }
+        }
+      }
     }
   },
   {
@@ -426,7 +431,12 @@ const TOOLS = [
     function: {
       name: 'read_placement_report',
       description: 'Read the official 2024-2026 Final Placement Report. Use this whenever the user asks about placement statistics, highest packages, average salary, top recruiters, or sector-wise placements.',
-      parameters: { type: 'object', properties: {} }
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Optional search query.' }
+        }
+      }
     }
   }
 ]
@@ -477,9 +487,10 @@ TOOL USAGE RULES:
 - "all courses / list all subjects" → get_all_courses
 - "find student [name]" → search_student
 - "SPOC for [name]" → search_spoc_directory
-- "placement rules / what happens if I reject / eligibility" → read_placement_policy
-- "placement stats / highest package / recruiters" → read_placement_report
+- Questions explicitly about "Placement Policy", "placement rules", "eligibility", "PPO", "offers", or rejecting offers → read_placement_policy
+- Questions explicitly about "Placement Report", "placement stats", "highest package", "average salary", or "recruiters" → read_placement_report
 
+CRITICAL: Do NOT use search_spoc_directory for "Placement Policy". "Placement Policy" is NOT a person! Use the read_placement_policy tool instead.
 When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.
 For placement questions, deeply analyze the requested situation based on the retrieved policy or report and give a direct, 100% accurate, and reasoned answer.`
 
