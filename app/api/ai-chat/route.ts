@@ -450,90 +450,44 @@ export async function POST(req: NextRequest) {
       (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt))
 
     if (isPlacementQuery) {
-      const placementSystemPrompt = `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately based ONLY on the documents provided. Cite specific rules or statistics. If the answer is not in the documents, say so clearly.`
+      const placementSystemPrompt = `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately and in full detail based ONLY on the official documents below. Cite specific rules, clauses or statistics. Never say the answer is not available if it is in the documents.`
 
-      const fullDocsContent = `${placementSystemPrompt}
-
-===== 2026-2027 PLACEMENT POLICY (FULL) =====
+      // Both documents after whitespace-cleaning = ~11,877 tokens (fits in Groq's 12K limit)
+      const fullDocsUserMessage = `===== 2026-2027 PLACEMENT POLICY (FULL DOCUMENT) =====
 ${PLACEMENT_POLICY}
 
-===== 2024-2026 FINAL PLACEMENT REPORT (FULL) =====
+===== 2024-2026 FINAL PLACEMENT REPORT (FULL DOCUMENT) =====
 ${PLACEMENT_REPORT}
 
 User question: ${prompt}`
 
-      // ── ATTEMPT 1: Gemini 2.0 Flash (1M token context, daily quota) ──
+      // ── PRIMARY: Gemini 2.0 Flash (1M context, best quality) ──
       if (GEMINI_API_KEY) {
         try {
           const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-          const result = await model.generateContent(fullDocsContent)
+          const result = await model.generateContent(`${placementSystemPrompt}\n\n${fullDocsUserMessage}`)
           return NextResponse.json({ reply: result.response.text() })
         } catch (geminiErr: any) {
-          console.warn('[Placement] Gemini unavailable, trying Llama 4 Scout:', geminiErr.message?.substring(0, 80))
+          console.warn('[Placement] Gemini quota hit, falling back to Groq with full docs')
         }
       }
 
-      // ── ATTEMPT 2: Llama 4 Scout on Groq (131K context window, separate quota) ──
-      try {
-        const scoutMessages = [
-          { role: 'user' as const, content: fullDocsContent }
-        ]
-        const scoutResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', messages: scoutMessages })
-        })
-        const scoutData = await scoutResponse.json()
-        if (scoutResponse.ok) {
-          return NextResponse.json({ reply: scoutData.choices[0].message.content })
-        }
-        console.warn('[Placement] Llama 4 Scout unavailable, using extraction:', scoutData.error?.message?.substring(0, 80))
-      } catch (scoutErr: any) {
-        console.warn('[Placement] Llama 4 Scout error:', scoutErr.message?.substring(0, 80))
-      }
-
-      // ── ATTEMPT 3 (last resort): Keyword extraction + Groq 70B ──
-      // Sends only the most relevant paragraphs to stay within free TPM limits.
-      const queryWords = lower.split(/\s+/).filter((w: string) => w.length > 3)
-
-      function extractSections(content: string, maxChars: number): string {
-        const chunks = content.split(/\r?\n{2,}|--+Page[^-]*--+/g).map((s: string) => s.trim()).filter((s: string) => s.length > 40)
-        const scored = chunks.map((chunk: string) => {
-          const cl = chunk.toLowerCase()
-          const score = queryWords.reduce((n: number, w: string) => n + (cl.includes(w) ? 1 : 0), 0)
-          return { chunk, score }
-        }).filter((x: { chunk: string; score: number }) => x.score > 0)
-          .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
-
-        let out = ''
-        let used = 0
-        for (const { chunk } of scored) {
-          if (used + chunk.length > maxChars) break
-          out += chunk + '\n\n'
-          used += chunk.length
-        }
-        return out.trim() || content.substring(0, Math.floor(maxChars * 0.6))
-      }
-
-      const policySnippet = extractSections(PLACEMENT_POLICY, 2200)
-      const reportSnippet = extractSections(PLACEMENT_REPORT, 1300)
-
-      const placementMessages = [
-        { role: 'system', content: placementSystemPrompt },
-        {
-          role: 'user',
-          content: `PLACEMENT POLICY EXCERPTS (most relevant sections):\n${policySnippet}\n\nPLACEMENT REPORT EXCERPTS (most relevant sections):\n${reportSnippet}\n\nNote: These are the most relevant excerpts. For broader context, ask a more specific question.\n\nUser question: ${prompt}`
-        }
-      ]
-
-      const placementResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      // ── FALLBACK: Groq llama-3.3-70b with FULL documents ──
+      // After whitespace cleanup, both docs = ~11,877 tokens — fits within 12K free-tier limit.
+      const fullDocsResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: placementMessages })
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: placementSystemPrompt },
+            { role: 'user', content: fullDocsUserMessage }
+          ]
+        })
       })
-      const placementData = await placementResponse.json()
-      if (!placementResponse.ok) throw new Error(placementData.error?.message || 'AI service error')
-      return NextResponse.json({ reply: placementData.choices[0].message.content })
+      const fullDocsData = await fullDocsResponse.json()
+      if (!fullDocsResponse.ok) throw new Error(fullDocsData.error?.message || 'AI service error')
+      return NextResponse.json({ reply: fullDocsData.choices[0].message.content })
     }
 
     // ─────────────────────────────────────────────────────────────────────────
