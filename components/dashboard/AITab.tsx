@@ -204,7 +204,13 @@ export default function AITab() {
     setIsLoading(true)
 
     try {
-      const payload: any = { prompt: userMessage || 'Summarize this document.' }
+      const payload: any = { 
+        prompt: userMessage || 'Summarize this document.',
+        history: messages.map(m => ({
+          role: m.role === 'ai' ? 'assistant' : 'user',
+          content: m.content
+        }))
+      }
       if (fileBase64) {
           payload.fileBase64 = fileBase64
           payload.mimeType = mimeType

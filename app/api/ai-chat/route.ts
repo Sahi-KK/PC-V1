@@ -413,7 +413,7 @@ const TOOLS = [
 // ─── Main handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, fileBase64, mimeType } = await req.json()
+    const { prompt, fileBase64, mimeType, history } = await req.json()
 
     // ── Document / Image upload → Gemini handwritten notes ──
     if (fileBase64 && mimeType) {
@@ -433,9 +433,7 @@ export async function POST(req: NextRequest) {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PATH A: Placement questions → keyword-extracted RAG via Groq
-    //         Extract only the relevant sections from documents (~1500 chars),
-    //         so we stay well within Groq's free-tier TPM limits.
+    // PATH A: Placement questions → full document RAG via Gemini / Groq
     // ─────────────────────────────────────────────────────────────────────────
     const PLACEMENT_KEYWORDS = [
       'placement policy', 'placement report', 'placement rule', 'placement stat',
@@ -446,43 +444,71 @@ export async function POST(req: NextRequest) {
       'case competition', 'freeze', 'placement freeze'
     ]
     const lower = prompt.toLowerCase()
+    
+    // Check if current prompt or any part of message history is about placement
+    const hasPlacementHistory = (history || []).some((msg: any) => {
+      const contentLower = (msg.content || '').toLowerCase()
+      return PLACEMENT_KEYWORDS.some(kw => contentLower.includes(kw)) || /\bplacement\b/i.test(contentLower)
+    })
+    
     const isPlacementQuery = PLACEMENT_KEYWORDS.some(kw => lower.includes(kw)) ||
-      (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt))
+      (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt)) ||
+      hasPlacementHistory
 
     if (isPlacementQuery) {
       const placementSystemPrompt = `You are the AI Assistant for PC-V1 Portal at IIM Rohtak. Answer the user's placement question accurately and in full detail based ONLY on the official documents below. Cite specific rules, clauses or statistics. Never say the answer is not available if it is in the documents.`
 
-      // Both documents after whitespace-cleaning = ~11,877 tokens (fits in Groq's 12K limit)
-      const fullDocsUserMessage = `===== 2026-2027 PLACEMENT POLICY (FULL DOCUMENT) =====
+      const fullDocsContextStr = `===== 2026-2027 PLACEMENT POLICY (FULL DOCUMENT) =====
 ${PLACEMENT_POLICY}
 
 ===== 2024-2026 FINAL PLACEMENT REPORT (FULL DOCUMENT) =====
-${PLACEMENT_REPORT}
+${PLACEMENT_REPORT}`
 
-User question: ${prompt}`
-
-      // ── PRIMARY: Gemini 2.0 Flash (1M context, best quality) ──
+      // ── PRIMARY: Gemini 2.0 Flash (1M context, best quality, system instruction configuration) ──
       if (GEMINI_API_KEY) {
         try {
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-          const result = await model.generateContent(`${placementSystemPrompt}\n\n${fullDocsUserMessage}`)
+          const model = genAI.getGenerativeModel({ 
+            model: 'gemini-2.0-flash',
+            systemInstruction: `${placementSystemPrompt}\n\n${fullDocsContextStr}`
+          })
+          
+          // Format chat history for Gemini SDK
+          const geminiHistory = (history || [])
+            .slice(1) // exclude initial system assistant greeting
+            .map((msg: any) => ({
+              role: msg.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: msg.content }]
+            }))
+
+          const result = await model.generateContent({
+            contents: [
+              ...geminiHistory,
+              { role: 'user', parts: [{ text: prompt }] }
+            ]
+          })
           return NextResponse.json({ reply: result.response.text() })
         } catch (geminiErr: any) {
-          console.warn('[Placement] Gemini quota hit, falling back to Groq with full docs')
+          console.warn('[Placement] Gemini error/quota hit, falling back to Groq with history:', geminiErr.message?.substring(0, 80))
         }
       }
 
-      // ── FALLBACK: Groq Llama 3.3 70B with FULL documents ──
-      // Both deep-pruned docs = ~8.9K tokens — fits well within Groq 12K limit.
+      // ── FALLBACK: Groq Llama 3.3 70B with FULL documents + History ──
+      const slicedHistory = (history || []).slice(1).slice(-6)
+      const placementMessages = [
+        { role: 'system', content: `${placementSystemPrompt}\n\n${fullDocsContextStr}` },
+        ...slicedHistory.map((msg: any) => ({
+          role: msg.role === 'assistant' ? 'assistant' : 'user',
+          content: msg.content
+        })),
+        { role: 'user', content: prompt }
+      ]
+
       const fullDocsResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: placementSystemPrompt },
-            { role: 'user', content: fullDocsUserMessage }
-          ]
+          messages: placementMessages
         })
       })
       const fullDocsData = await fullDocsResponse.json()
@@ -521,8 +547,13 @@ TOOL USAGE RULES:
 
 When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.`
 
+    const slicedHistoryPathB = (history || []).slice(1).slice(-6)
     const messages: any[] = [
       { role: 'system', content: systemPrompt },
+      ...slicedHistoryPathB.map((msg: any) => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      })),
       { role: 'user', content: prompt }
     ]
 
