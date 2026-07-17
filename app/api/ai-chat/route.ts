@@ -470,7 +470,7 @@ ${PLACEMENT_REPORT}`
           const model = genAI.getGenerativeModel({ 
             model: 'gemini-2.0-flash',
             systemInstruction: `${placementSystemPrompt}\n\n${fullDocsContextStr}`
-          })
+          }, { timeout: 4000 })
           
           // Format chat history for Gemini SDK
           const geminiHistory = (history || [])
