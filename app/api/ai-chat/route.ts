@@ -13,7 +13,36 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const service = supabaseCreateClient(supabaseUrl, supabaseServiceKey)
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+async function generateGeminiContent(
+  modelName: string,
+  contentsPayload: any,
+  systemInstruction?: string,
+  timeoutMs: number = 4000
+): Promise<string> {
+  const keys = GEMINI_API_KEY.split(',').map(k => k.trim()).filter(Boolean)
+  if (keys.length === 0) {
+    throw new Error('GEMINI_API_KEY is not configured.')
+  }
+
+  let lastError: any = null
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i]
+    try {
+      const gen = new GoogleGenerativeAI(key)
+      const model = gen.getGenerativeModel({
+        model: modelName,
+        systemInstruction
+      }, { timeout: timeoutMs })
+
+      const result = await model.generateContent(contentsPayload)
+      return result.response.text()
+    } catch (err: any) {
+      console.warn(`[Gemini SDK] Key ${i + 1}/${keys.length} failed:`, err.message?.substring(0, 80))
+      lastError = err
+    }
+  }
+  throw lastError || new Error('All Gemini API keys failed.')
+}
 
 // ─── Course full name cache ───────────────────────────────────────────────────
 let courseCache: Record<string, { full_name: string; faculty: string; faculty_abbr: string; credit: number }> | null = null
@@ -418,10 +447,14 @@ export async function POST(req: NextRequest) {
     // ── Document / Image upload → Gemini handwritten notes ──
     if (fileBase64 && mimeType) {
       if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
       const promptText = 'Read the attached document/image and act as a strategic decision-maker. Create a Decision Sheet that identifies the core problems presented in the document, and for each problem, map out clear, actionable solutions or suggestions. Output plain text ONLY without any markdown formatting. Format it as continuous natural paragraphs suitable for realistic handwritten notes. Start by stating the problems clearly, followed by the proposed solutions mapping. User query context: ' + prompt
-      const result = await model.generateContent([promptText, { inlineData: { data: fileBase64, mimeType } }])
-      return NextResponse.json({ reply: result.response.text(), type: 'handwritten_notes' })
+      const reply = await generateGeminiContent(
+        'gemini-3.5-flash',
+        [promptText, { inlineData: { data: fileBase64, mimeType } }],
+        undefined,
+        15000 // give image uploads 15 seconds as they take longer
+      )
+      return NextResponse.json({ reply, type: 'handwritten_notes' })
     }
 
     // ── Identify logged-in user ──
@@ -464,14 +497,9 @@ ${PLACEMENT_POLICY}
 ===== 2024-2026 FINAL PLACEMENT REPORT (FULL DOCUMENT) =====
 ${PLACEMENT_REPORT}`
 
-      // ── PRIMARY: Gemini 2.0 Flash (1M context, best quality, system instruction configuration) ──
+      // ── PRIMARY: Gemini 3.5 Flash (1M context, best quality, system instruction configuration) ──
       if (GEMINI_API_KEY) {
         try {
-          const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.0-flash',
-            systemInstruction: `${placementSystemPrompt}\n\n${fullDocsContextStr}`
-          }, { timeout: 4000 })
-          
           // Format chat history for Gemini SDK
           const geminiHistory = (history || [])
             .slice(1) // exclude initial system assistant greeting
@@ -480,13 +508,18 @@ ${PLACEMENT_REPORT}`
               parts: [{ text: msg.content }]
             }))
 
-          const result = await model.generateContent({
-            contents: [
-              ...geminiHistory,
-              { role: 'user', parts: [{ text: prompt }] }
-            ]
-          })
-          return NextResponse.json({ reply: result.response.text() })
+          const reply = await generateGeminiContent(
+            'gemini-3.5-flash',
+            {
+              contents: [
+                ...geminiHistory,
+                { role: 'user', parts: [{ text: prompt }] }
+              ]
+            },
+            `${placementSystemPrompt}\n\n${fullDocsContextStr}`,
+            4000 // 4 seconds timeout
+          )
+          return NextResponse.json({ reply })
         } catch (geminiErr: any) {
           console.warn('[Placement] Gemini error/quota hit, falling back to Groq with history:', geminiErr.message?.substring(0, 80))
         }
