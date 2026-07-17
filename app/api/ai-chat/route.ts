@@ -407,19 +407,6 @@ const TOOLS = [
         required: ['query']
       }
     }
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'query_placement_knowledge',
-      description: 'Fetch the 2026-2027 Placement Policy or 2024-2026 Final Placement Report. Use this whenever the user asks about placement rules, eligibility, shortlisting, highest packages, top recruiters, rejecting offers, or any policy situations.',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: { type: 'string', description: 'The exact question the user asked so you can retrieve relevant knowledge.' }
-        }
-      }
-    }
   }
 ]
 
@@ -431,7 +418,7 @@ export async function POST(req: NextRequest) {
     // ── Document / Image upload → Gemini handwritten notes ──
     if (fileBase64 && mimeType) {
       if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
       const promptText = 'Read the attached document/image and act as a strategic decision-maker. Create a Decision Sheet that identifies the core problems presented in the document, and for each problem, map out clear, actionable solutions or suggestions. Output plain text ONLY without any markdown formatting. Format it as continuous natural paragraphs suitable for realistic handwritten notes. Start by stating the problems clearly, followed by the proposed solutions mapping. User query context: ' + prompt
       const result = await model.generateContent([promptText, { inlineData: { data: fileBase64, mimeType } }])
       return NextResponse.json({ reply: result.response.text(), type: 'handwritten_notes' })
@@ -445,6 +432,47 @@ export async function POST(req: NextRequest) {
     // Timezone-safe today's date (IST)
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // PATH A: Placement questions → Gemini SDK directly (1M token context,
+    //         no tool-calling overhead, no TPM rate-limit issues)
+    // ─────────────────────────────────────────────────────────────────────────
+    const PLACEMENT_KEYWORDS = [
+      'placement policy', 'placement report', 'placement rule', 'placement stat',
+      'placement process', 'placement eligibility', 'iimr placement', 'iim rohtak placement',
+      'ppo', 'pre-placement offer', 'shortlist', 'shortlisting',
+      'highest package', 'highest salary', 'average package', 'average salary', 'median salary',
+      'top recruiter', 'recruiter', 'reject offer', 'offer reject', 'opting out',
+      'case competition', 'freeze', 'placement freeze'
+    ]
+    const lower = prompt.toLowerCase()
+    const isPlacementQuery = PLACEMENT_KEYWORDS.some(kw => lower.includes(kw)) ||
+      (/\bplacement\b/i.test(prompt) && !/my placement/i.test(prompt))
+
+    if (isPlacementQuery) {
+      if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const placementPrompt = `You are the AI Assistant for PC-V1 Academic Portal at IIM Rohtak. The user has a question about IIM Rohtak's placement process.
+
+Here are the two official documents to reference:
+
+===== 2026-2027 PLACEMENT POLICY =====
+${PLACEMENT_POLICY}
+
+===== 2024-2026 FINAL PLACEMENT REPORT =====
+${PLACEMENT_REPORT}
+
+Based ONLY on the above documents, answer the user's question accurately and in detail. If the answer is in the Policy, cite the specific rule. If it is in the Report, cite the specific statistic. If neither document contains the answer, say so clearly.
+
+User question: ${prompt}`
+
+      const result = await model.generateContent(placementPrompt)
+      return NextResponse.json({ reply: result.response.text() })
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PATH B: All other queries → Groq with tool-calling
+    //         (schedule, attendance, courses, students — small DB results)
+    // ─────────────────────────────────────────────────────────────────────────
     const systemPrompt = `You are the AI Assistant for the PC-V1 Academic Portal at IIM Rohtak.
 Today's date is ${today} (use this for "today", "tomorrow", "this week" queries).
 
@@ -469,28 +497,23 @@ TOOL USAGE RULES:
 - "all courses / list all subjects" → get_all_courses
 - "find student [name]" → search_student
 - "SPOC for [name]" → search_spoc_directory
-- Questions explicitly about "Placement Policy", "placement rules", "eligibility", "PPO", "offers", or rejecting offers → query_placement_knowledge
-- Questions explicitly about "Placement Report", "placement stats", "highest package", "average salary", or "recruiters" → query_placement_knowledge
 
-CRITICAL: Do NOT output raw XML <function> tags! You MUST use the standard native JSON tool-calling interface!
-CRITICAL: Do NOT use search_spoc_directory for "Placement Policy". "Placement Policy" is NOT a person! Use the query_placement_knowledge tool instead.
-When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.
-For placement questions, deeply analyze the requested situation based on the retrieved policy or report and give a direct, 100% accurate, and reasoned answer.`
+When presenting schedules, format them clearly grouped by date. Mention the faculty name alongside each course. Be concise and helpful.`
 
     const messages: any[] = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt }
     ]
 
-    // ── First LLM call ──
-    let response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+    // ── First LLM call (Groq) ──
+    let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gemini-1.5-flash', messages, tools: TOOLS, tool_choice: 'auto' })
+      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, tools: TOOLS, tool_choice: 'auto' })
     })
 
     let data = await response.json()
-    if (!response.ok) throw new Error(data.error?.message || 'Groq API error')
+    if (!response.ok) throw new Error(data.error?.message || 'AI service error')
 
     let message = data.choices[0].message
 
@@ -506,13 +529,13 @@ For placement questions, deeply analyze the requested situation based on the ret
         messages.push({ role: 'tool', tool_call_id: toolCall.id, content: result })
       }
 
-      response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'gemini-1.5-flash', messages })
+        headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages })
       })
       data = await response.json()
-      if (!response.ok) throw new Error(data.error?.message || 'Gemini API error')
+      if (!response.ok) throw new Error(data.error?.message || 'AI service error')
       message = data.choices[0].message
     }
 
