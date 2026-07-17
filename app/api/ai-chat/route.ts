@@ -492,10 +492,63 @@ ${PLACEMENT_REPORT}`
         }
       }
 
-      // ── FALLBACK: Groq Llama 3.3 70B with FULL documents + History ──
+      // ── FALLBACK: Groq Llama 3.3 70B with Smart Follow-up RAG ──
+      // To prevent Groq 12K rolling tokens per minute (TPM) limit issues on subsequent turns,
+      // we extract only the relevant document paragraphs matching the keywords in the current 
+      // query and the last few user messages. This reduces each request to ~2000 tokens while
+      // preserving perfect context for follow-up questions.
+      const userMessages = (history || [])
+        .filter((msg: any) => msg.role === 'user')
+        .slice(-2)
+        .map((msg: any) => msg.content)
+      userMessages.push(prompt)
+      
+      const allSearchText = userMessages.join(' ').toLowerCase()
+      const queryWords = allSearchText
+        .split(/\s+/)
+        .filter((w: string) => w.length > 3 && !['what', 'when', 'where', 'how', 'who', 'which', 'would', 'could', 'should', 'about', 'from', 'with'].includes(w))
+
+      function extractRelevantContext(content: string, maxChars: number): string {
+        const paragraphs = content
+          .split(/\n{2,}/g)
+          .map((p: string) => p.trim())
+          .filter((p: string) => p.length > 20)
+
+        const scored = paragraphs.map((para: string) => {
+          const pl = para.toLowerCase()
+          const score = queryWords.reduce((n: number, w: string) => {
+            const regex = new RegExp('\\\b' + w + '\\\b', 'gi')
+            const matches = pl.match(regex)
+            return n + (matches ? matches.length * 2 : (pl.includes(w) ? 1 : 0))
+          }, 0)
+          return { para, score }
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+
+        let result = ''
+        let length = 0
+        for (const item of scored) {
+          if (length + item.para.length > maxChars) break
+          result += item.para + '\n\n'
+          length += item.para.length
+        }
+        
+        return result.trim() || content.substring(0, maxChars)
+      }
+
+      const policyContext = extractRelevantContext(PLACEMENT_POLICY, 4500)
+      const reportContext = extractRelevantContext(PLACEMENT_REPORT, 3500)
+
+      const fallbackContextStr = `===== PLACEMENT POLICY EXCERPTS =====
+${policyContext}
+
+===== PLACEMENT REPORT EXCERPTS =====
+${reportContext}`
+
       const slicedHistory = (history || []).slice(1).slice(-6)
       const placementMessages = [
-        { role: 'system', content: `${placementSystemPrompt}\n\n${fullDocsContextStr}` },
+        { role: 'system', content: `${placementSystemPrompt}\n\n${fallbackContextStr}` },
         ...slicedHistory.map((msg: any) => ({
           role: msg.role === 'assistant' ? 'assistant' : 'user',
           content: msg.content
