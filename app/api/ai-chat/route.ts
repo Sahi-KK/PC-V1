@@ -418,7 +418,7 @@ export async function POST(req: NextRequest) {
     // ── Document / Image upload → Gemini handwritten notes ──
     if (fileBase64 && mimeType) {
       if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
       const promptText = 'Read the attached document/image and act as a strategic decision-maker. Create a Decision Sheet that identifies the core problems presented in the document, and for each problem, map out clear, actionable solutions or suggestions. Output plain text ONLY without any markdown formatting. Format it as continuous natural paragraphs suitable for realistic handwritten notes. Start by stating the problems clearly, followed by the proposed solutions mapping. User query context: ' + prompt
       const result = await model.generateContent([promptText, { inlineData: { data: fileBase64, mimeType } }])
       return NextResponse.json({ reply: result.response.text(), type: 'handwritten_notes' })
@@ -450,7 +450,7 @@ export async function POST(req: NextRequest) {
 
     if (isPlacementQuery) {
       if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not configured.')
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
       const placementPrompt = `You are the AI Assistant for PC-V1 Academic Portal at IIM Rohtak. The user has a question about IIM Rohtak's placement process.
 
 Here are the two official documents to reference:
