@@ -521,7 +521,7 @@ ${PLACEMENT_REPORT}`
               ]
             },
             `${placementSystemPrompt}\n\n${fullDocsContextStr}`,
-            4000 // 4 seconds timeout
+            12000 // 12 seconds timeout
           )
           return NextResponse.json({ reply })
         } catch (geminiErr: any) {
