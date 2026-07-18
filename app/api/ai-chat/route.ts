@@ -500,13 +500,17 @@ ${PLACEMENT_REPORT}`
       // ── PRIMARY: Gemini 3.5 Flash (1M context, best quality, system instruction configuration) ──
       if (GEMINI_API_KEY) {
         try {
-          // Format chat history for Gemini SDK
-          const geminiHistory = (history || [])
+          // Format chat history for Gemini SDK (must start with user turn)
+          let geminiHistory = (history || [])
             .slice(1) // exclude initial system assistant greeting
             .map((msg: any) => ({
               role: msg.role === 'assistant' ? 'model' : 'user',
               parts: [{ text: msg.content }]
             }))
+
+          if (geminiHistory.length > 0 && geminiHistory[0].role === 'model') {
+            geminiHistory = geminiHistory.slice(1)
+          }
 
           const reply = await generateGeminiContent(
             'gemini-3.5-flash',
